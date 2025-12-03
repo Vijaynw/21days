@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Habit } from '@/types/habit';
+import { Habit, HabitCategory } from '@/types/habit';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate, isCompletedToday } from '@/utils/streaks';
 import React, { useEffect, useState } from 'react';
@@ -14,16 +14,38 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
-const HABIT_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+const HABIT_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+
+const HABIT_CATEGORIES: { value: HabitCategory; label: string; icon: string }[] = [
+  { value: 'health', label: 'Health & Fitness', icon: 'heart.fill' },
+  { value: 'productivity', label: 'Productivity', icon: 'briefcase.fill' },
+  { value: 'learning', label: 'Learning', icon: 'book.fill' },
+  { value: 'mindfulness', label: 'Mindfulness', icon: 'leaf.fill' },
+  { value: 'social', label: 'Social', icon: 'person.2.fill' },
+  { value: 'creative', label: 'Creative', icon: 'paintbrush.fill' },
+  { value: 'custom', label: 'Custom', icon: 'star.fill' },
+];
+
+const HABIT_TEMPLATES = [
+  { name: 'Drink 8 glasses of water', category: 'health' as HabitCategory, color: '#45B7D1' },
+  { name: '10-minute meditation', category: 'mindfulness' as HabitCategory, color: '#BB8FCE' },
+  { name: 'Read for 30 minutes', category: 'learning' as HabitCategory, color: '#F7DC6F' },
+  { name: 'Exercise for 20 minutes', category: 'health' as HabitCategory, color: '#FF6B6B' },
+  { name: 'Write in journal', category: 'mindfulness' as HabitCategory, color: '#98D8C8' },
+  { name: 'Practice gratitude', category: 'mindfulness' as HabitCategory, color: '#FFA07A' },
+];
 
 export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [selectedColor, setSelectedColor] = useState(HABIT_COLORS[0]);
+  const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('custom');
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<HabitCategory | 'all'>('all');
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -35,13 +57,15 @@ export default function HabitsScreen() {
     setHabits(loadedHabits);
   };
 
-  const addHabit = async () => {
-    if (!newHabitName.trim()) return;
-    console.log("Date.now().toString()", Date.now().toString());
+  const addHabit = async (template?: typeof HABIT_TEMPLATES[0]) => {
+    const habitName = template ? template.name : newHabitName.trim();
+    if (!habitName) return;
+    
     const newHabit: Habit = {
       id: Date.now().toString(),
-      name: newHabitName.trim(),
-      color: selectedColor,
+      name: habitName,
+      category: template ? template.category : selectedCategory,
+      color: template ? template.color : selectedColor,
       createdAt: new Date().toISOString(),
       completions: [],
     };
@@ -50,7 +74,9 @@ export default function HabitsScreen() {
     setHabits([...habits, newHabit]);
     setNewHabitName('');
     setIsAdding(false);
+    setShowTemplates(false);
     setSelectedColor(HABIT_COLORS[0]);
+    setSelectedCategory('custom');
   };
 
   const toggleCompletion = async (habit: Habit) => {
@@ -69,17 +95,55 @@ export default function HabitsScreen() {
   };
 
   const deleteHabit = (habitId: string) => {
+    console.log('Delete function called with habitId:', habitId);
+    
+    // Temporary: Delete immediately without confirmation for testing
+    console.log('Immediate delete (testing)');
+    storage.deleteHabit(habitId).then(() => {
+      console.log('Habit deleted from storage');
+      const filteredHabits = habits.filter(h => h.id !== habitId);
+      console.log('Filtered habits count:', filteredHabits.length);
+      console.log('Original habits count:', habits.length);
+      setHabits(filteredHabits);
+      console.log('State updated');
+    }).catch(error => {
+      console.error('Error deleting habit:', error);
+      Alert.alert('Error', 'Failed to delete habit');
+    });
+    
+    // Original code with confirmation (commented out for testing)
+    /*
     Alert.alert('Delete Habit', 'Are you sure you want to delete this habit?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          await storage.deleteHabit(habitId);
-          setHabits(habits.filter(h => h.id !== habitId));
+        onPress: () => {
+          console.log('Delete button pressed in alert');
+          storage.deleteHabit(habitId).then(() => {
+            console.log('Habit deleted from storage');
+            const filteredHabits = habits.filter(h => h.id !== habitId);
+            console.log('Filtered habits count:', filteredHabits.length);
+            console.log('Original habits count:', habits.length);
+            setHabits(filteredHabits);
+            console.log('State updated');
+          }).catch(error => {
+            console.error('Error deleting habit:', error);
+            Alert.alert('Error', 'Failed to delete habit');
+          });
         },
       },
     ]);
+    */
+  };
+
+  const filteredHabits = selectedFilter === 'all' 
+    ? habits 
+    : habits.filter(h => h.category === selectedFilter);
+
+  const getCategoryIcon = (category?: HabitCategory) => {
+    const cat = HABIT_CATEGORIES.find(c => c.value === category);
+    return cat ? cat.icon : 'star.fill';
   };
 
   return (
@@ -97,51 +161,157 @@ export default function HabitsScreen() {
 
       {isAdding && (
         <View style={[styles.addForm, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: Colors[colorScheme ?? 'light'].background,
-                color: Colors[colorScheme ?? 'light'].text,
-                borderColor: Colors[colorScheme ?? 'light'].tint,
-              },
-            ]}
-            placeholder="Habit name"
-            placeholderTextColor={Colors[colorScheme ?? 'light'].tabIconDefault}
-            value={newHabitName}
-            onChangeText={setNewHabitName}
-            autoFocus
-          />
-          <View style={styles.colorPicker}>
-            {HABIT_COLORS.map(color => (
-              <TouchableOpacity
-                key={color}
-                onPress={() => setSelectedColor(color)}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color },
-                  selectedColor === color && styles.colorOptionSelected,
-                ]}
-              />
-            ))}
+          <View style={styles.addFormHeader}>
+            <TouchableOpacity
+              onPress={() => setShowTemplates(false)}
+              style={[
+                styles.formTab,
+                !showTemplates && { borderBottomColor: Colors[colorScheme ?? 'light'].tint },
+              ]}>
+              <ThemedText style={[styles.formTabText, !showTemplates && styles.formTabTextActive]}>Custom</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowTemplates(true)}
+              style={[
+                styles.formTab,
+                showTemplates && { borderBottomColor: Colors[colorScheme ?? 'light'].tint },
+              ]}>
+              <ThemedText style={[styles.formTabText, showTemplates && styles.formTabTextActive]}>Templates</ThemedText>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={addHabit}
-            style={[styles.saveButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
-            <Text style={styles.saveButtonText}>Add Habit</Text>
-          </TouchableOpacity>
+
+          {!showTemplates ? (
+            <>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: Colors[colorScheme ?? 'light'].background,
+                    color: Colors[colorScheme ?? 'light'].text,
+                    borderColor: Colors[colorScheme ?? 'light'].tint,
+                  },
+                ]}
+                placeholder="Habit name"
+                placeholderTextColor={Colors[colorScheme ?? 'light'].tabIconDefault}
+                value={newHabitName}
+                onChangeText={setNewHabitName}
+                autoFocus
+              />
+              
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryPicker}>
+                {HABIT_CATEGORIES.map(cat => (
+                  <TouchableOpacity
+                    key={cat.value}
+                    onPress={() => setSelectedCategory(cat.value)}
+                    style={[
+                      styles.categoryChip,
+                      selectedCategory === cat.value && { backgroundColor: Colors[colorScheme ?? 'light'].tint },
+                    ]}>
+                    <IconSymbol
+                      name={cat.icon as any}
+                      size={16}
+                      color={selectedCategory === cat.value ? '#fff' : Colors[colorScheme ?? 'light'].text}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.categoryChipText,
+                        selectedCategory === cat.value && { color: '#fff' },
+                      ]}>
+                      {cat.label}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.colorPicker}>
+                {HABIT_COLORS.map(color => (
+                  <TouchableOpacity
+                    key={color}
+                    onPress={() => setSelectedColor(color)}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: color },
+                      selectedColor === color && styles.colorOptionSelected,
+                    ]}
+                  />
+                ))}
+              </View>
+              
+              <TouchableOpacity
+                onPress={() => addHabit()}
+                style={[styles.saveButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
+                <Text style={styles.saveButtonText}>Add Habit</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <ScrollView style={styles.templatesList}>
+              {HABIT_TEMPLATES.map((template, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => addHabit(template)}
+                  style={[styles.templateItem, { borderLeftColor: template.color }]}>
+                  <View style={[styles.templateDot, { backgroundColor: template.color }]} />
+                  <ThemedText style={styles.templateName}>{template.name}</ThemedText>
+                  <IconSymbol name="plus.circle.fill" size={24} color={Colors[colorScheme ?? 'light'].tint} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       )}
 
+      {/* Filter Pills */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterContainer}
+        contentContainerStyle={styles.filterContent}>
+        <TouchableOpacity
+          onPress={() => setSelectedFilter('all')}
+          style={[
+            styles.filterPill,
+            selectedFilter === 'all' && { backgroundColor: Colors[colorScheme ?? 'light'].tint },
+          ]}>
+          <ThemedText
+            style={[
+              styles.filterPillText,
+              selectedFilter === 'all' && { color: '#fff' },
+            ]}>
+            All ({habits.length})
+          </ThemedText>
+        </TouchableOpacity>
+        {HABIT_CATEGORIES.map(cat => {
+          const count = habits.filter(h => h.category === cat.value).length;
+          if (count === 0) return null;
+          return (
+            <TouchableOpacity
+              key={cat.value}
+              onPress={() => setSelectedFilter(cat.value)}
+              style={[
+                styles.filterPill,
+                selectedFilter === cat.value && { backgroundColor: Colors[colorScheme ?? 'light'].tint },
+              ]}>
+              <ThemedText
+                style={[
+                  styles.filterPillText,
+                  selectedFilter === cat.value && { color: '#fff' },
+                ]}>
+                {cat.label} ({count})
+              </ThemedText>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       <ScrollView style={styles.habitsList}>
-        {habits.length === 0 ? (
+        {filteredHabits.length === 0 ? (
           <View style={styles.emptyState}>
             <IconSymbol name="star" size={64} color={Colors[colorScheme ?? 'light'].tabIconDefault} />
             <ThemedText style={styles.emptyText}>No habits yet</ThemedText>
             <ThemedText style={styles.emptySubtext}>Tap + to create your first habit</ThemedText>
           </View>
         ) : (
-          habits.map(habit => {
+          filteredHabits.map(habit => {
             const stats = calculateStreaks(habit);
             const completed = isCompletedToday(habit);
 
@@ -159,9 +329,19 @@ export default function HabitsScreen() {
                     {completed && <IconSymbol name="checkmark" size={20} color="#fff" />}
                   </View>
                   <View style={styles.habitInfo}>
-                    <ThemedText type="defaultSemiBold" style={styles.habitName}>
-                      {habit.name}
-                    </ThemedText>
+                    <View style={styles.habitNameRow}>
+                      <ThemedText type="defaultSemiBold" style={styles.habitName}>
+                        {habit.name}
+                      </ThemedText>
+                      {habit.category && (
+                        <IconSymbol
+                          name={getCategoryIcon(habit.category) as any}
+                          size={16}
+                          color={habit.color}
+                          style={styles.categoryIcon}
+                        />
+                      )}
+                    </View>
                     <View style={styles.statsRow}>
                       <View style={styles.stat}>
                         <IconSymbol name="flame.fill" size={16} color={habit.color} />
@@ -312,5 +492,93 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  addFormHeader: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(128, 128, 128, 0.2)',
+  },
+  formTab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  formTabText: {
+    fontSize: 14,
+    opacity: 0.6,
+  },
+  formTabTextActive: {
+    opacity: 1,
+    fontWeight: '600',
+  },
+  categoryPicker: {
+    marginBottom: 12,
+    maxHeight: 40,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    gap: 4,
+  },
+  categoryChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  templatesList: {
+    maxHeight: 200,
+  },
+  templateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    borderLeftWidth: 3,
+  },
+  templateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  templateName: {
+    flex: 1,
+    fontSize: 14,
+  },
+  filterContainer: {
+    maxHeight: 40,
+    marginBottom: 12,
+  },
+  filterContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  filterPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    marginRight: 8,
+  },
+  filterPillText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  habitNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  categoryIcon: {
+    marginLeft: 4,
   },
 });
