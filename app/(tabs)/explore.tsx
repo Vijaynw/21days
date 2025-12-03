@@ -1,112 +1,324 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Habit } from '@/types/habit';
+import { storage } from '@/utils/storage';
+import { formatDate } from '@/utils/streaks';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-export default function TabTwoScreen() {
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export default function CalendarScreen() {
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedHabit, setSelectedHabit] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+
+  const loadHabits = useCallback(async () => {
+    const loadedHabits = await storage.getHabits();
+    setHabits(loadedHabits);
+    if (loadedHabits.length > 0 && !selectedHabit) {
+      setSelectedHabit(loadedHabits[0].id);
+    }
+  }, [selectedHabit]);
+
+  useEffect(() => {
+    loadHabits();
+  }, [loadHabits]);
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const isDateCompleted = (day: number) => {
+    if (!selectedHabit) return false;
+    const habit = habits.find(h => h.id === selectedHabit);
+    if (!habit) return false;
+
+    const dateStr = formatDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    );
+    return habit.completions.includes(dateStr);
+  };
+
+  const changeMonth = (direction: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setCurrentDate(newDate);
+  };
+
+  const selectedHabitData = habits.find(h => h.id === selectedHabit);
+  const days = getDaysInMonth(currentDate);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.title}>
+          Calendar
         </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
+      </View>
+
+      {habits.length === 0 ? (
+        <View style={styles.emptyState}>
+          <IconSymbol
+            name="calendar"
+            size={64}
+            color={Colors[colorScheme ?? 'light'].tabIconDefault}
+          />
+          <ThemedText style={styles.emptyText}>No habits to track</ThemedText>
+          <ThemedText style={styles.emptySubtext}>
+            Create a habit in the Habits tab first
+          </ThemedText>
+        </View>
+      ) : (
+        <ScrollView style={styles.content}>
+          {/* Habit Selector */}
+          <View style={styles.habitSelector}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {habits.map(habit => (
+                <TouchableOpacity
+                  key={habit.id}
+                  onPress={() => setSelectedHabit(habit.id)}
+                  style={[
+                    styles.habitChip,
+                    {
+                      backgroundColor:
+                        selectedHabit === habit.id
+                          ? habit.color
+                          : Colors[colorScheme ?? 'light'].background,
+                      borderColor: habit.color,
+                    },
+                  ]}>
+                  <ThemedText
+                    style={[
+                      styles.habitChipText,
+                      selectedHabit === habit.id && { color: '#fff' },
+                    ]}>
+                    {habit.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Month Navigation */}
+          <View style={styles.monthNav}>
+            <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.navButton}>
+              <IconSymbol name="chevron.left" size={24} color={selectedHabitData?.color || Colors[colorScheme ?? 'light'].tint} />
+            </TouchableOpacity>
+            <ThemedText type="subtitle" style={styles.monthText}>
+              {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
             </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+            <TouchableOpacity onPress={() => changeMonth(1)} style={styles.navButton}>
+              <IconSymbol name="chevron.right" size={24} color={selectedHabitData?.color || Colors[colorScheme ?? 'light'].tint} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Calendar Grid */}
+          <View style={styles.calendar}>
+            {/* Day Headers */}
+            <View style={styles.dayHeaders}>
+              {DAYS.map(day => (
+                <View key={day} style={styles.dayHeader}>
+                  <ThemedText style={styles.dayHeaderText}>{day}</ThemedText>
+                </View>
+              ))}
+            </View>
+
+            {/* Calendar Days */}
+            <View style={styles.daysGrid}>
+              {days.map((day, index) => (
+                <View key={index} style={styles.dayCell}>
+                  {day !== null && (
+                    <View
+                      style={[
+                        styles.dayCircle,
+                        isDateCompleted(day) && {
+                          backgroundColor: selectedHabitData?.color,
+                        },
+                      ]}>
+                      <ThemedText
+                        style={[
+                          styles.dayText,
+                          isDateCompleted(day) && styles.dayTextCompleted,
+                        ]}>
+                        {day}
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Legend */}
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: selectedHabitData?.color || '#ccc' },
+                ]}
+              />
+              <ThemedText style={styles.legendText}>Completed</ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.legendDotEmpty]} />
+              <ThemedText style={styles.legendText}>Not completed</ThemedText>
+            </View>
+          </View>
+        </ScrollView>
+      )}
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    paddingTop: 60,
   },
-  titleContainer: {
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 100,
+  },
+  emptyText: {
+    fontSize: 20,
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.6,
+  },
+  habitSelector: {
+    marginBottom: 24,
+  },
+  habitChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 2,
+  },
+  habitChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  monthNav: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  navButton: {
+    padding: 8,
+  },
+  monthText: {
+    fontSize: 20,
+  },
+  calendar: {
+    marginBottom: 24,
+  },
+  dayHeaders: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  dayHeader: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dayHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.6,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    padding: 2,
+  },
+  dayCircle: {
+    flex: 1,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+  },
+  dayText: {
+    fontSize: 14,
+  },
+  dayTextCompleted: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    paddingVertical: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+  },
+  legendDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  legendDotEmpty: {
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+  },
+  legendText: {
+    fontSize: 12,
+    opacity: 0.7,
   },
 });
