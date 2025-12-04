@@ -9,6 +9,7 @@ import { calculateStreaks, formatDate, isCompletedToday } from '@/utils/streaks'
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Modal,
   ScrollView,
   StyleSheet,
@@ -18,19 +19,23 @@ import {
   View
 } from 'react-native';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.35;
+const CARD_SPACING = 12;
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const HABIT_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
-const HABIT_CATEGORIES: { value: HabitCategory; label: string; icon: string }[] = [
-  { value: 'health', label: 'Health & Fitness', icon: 'heart.fill' },
-  { value: 'productivity', label: 'Productivity', icon: 'briefcase.fill' },
-  { value: 'learning', label: 'Learning', icon: 'book.fill' },
-  { value: 'mindfulness', label: 'Mindfulness', icon: 'leaf.fill' },
-  { value: 'social', label: 'Social', icon: 'person.2.fill' },
-  { value: 'creative', label: 'Creative', icon: 'paintbrush.fill' },
-  { value: 'custom', label: 'Custom', icon: 'star.fill' },
+const HABIT_CATEGORIES: { value: HabitCategory; label: string; icon: string; color: string; gradient: string }[] = [
+  { value: 'health', label: 'Health', icon: 'heart.fill', color: '#FF6B6B', gradient: '#FF8E8E' },
+  { value: 'productivity', label: 'Productivity', icon: 'briefcase.fill', color: '#4ECDC4', gradient: '#7EDDD6' },
+  { value: 'learning', label: 'Learning', icon: 'book.fill', color: '#F7DC6F', gradient: '#FAE89F' },
+  { value: 'mindfulness', label: 'Mindfulness', icon: 'leaf.fill', color: '#BB8FCE', gradient: '#D4B3E0' },
+  { value: 'social', label: 'Social', icon: 'person.2.fill', color: '#85C1E2', gradient: '#A8D4ED' },
+  { value: 'creative', label: 'Creative', icon: 'paintbrush.fill', color: '#FFA07A', gradient: '#FFB99A' },
+  { value: 'custom', label: 'Custom', icon: 'star.fill', color: '#98D8C8', gradient: '#B5E5D9' },
 ];
 
 const HABIT_TEMPLATES = [
@@ -305,65 +310,78 @@ export default function HabitsScreen() {
 
           {!showTemplates ? (
             <>
+              {/* Swipeable Category Cards */}
+              <ThemedText style={styles.sectionLabel}>Choose a category</ThemedText>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.categoryCardsContainer}
+                contentContainerStyle={styles.categoryCardsContent}
+                snapToInterval={CARD_WIDTH + CARD_SPACING}
+                decelerationRate="fast"
+              >
+                {HABIT_CATEGORIES.map(cat => {
+                  const isSelected = selectedCategory === cat.value;
+                  return (
+                    <TouchableOpacity
+                      key={cat.value}
+                      onPress={() => {
+                        setSelectedCategory(cat.value);
+                        setSelectedColor(cat.color);
+                      }}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.categoryCard,
+                        { 
+                          backgroundColor: cat.color,
+                          width: CARD_WIDTH,
+                          transform: [{ scale: isSelected ? 1.05 : 1 }],
+                        },
+                        isSelected && styles.categoryCardSelected,
+                      ]}>
+                      <View style={styles.categoryCardIcon}>
+                        <IconSymbol name={cat.icon as any} size={32} color="#fff" />
+                      </View>
+                      <Text style={styles.categoryCardLabel}>{cat.label}</Text>
+                      {isSelected && (
+                        <View style={styles.categoryCardCheck}>
+                          <IconSymbol name="checkmark" size={16} color={cat.color} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Habit Name Input */}
+              <ThemedText style={styles.sectionLabel}>Name your habit</ThemedText>
               <TextInput
                 style={[
                   styles.input,
                   {
                     backgroundColor: Colors[colorScheme ?? 'light'].background,
                     color: Colors[colorScheme ?? 'light'].text,
-                    borderColor: Colors[colorScheme ?? 'light'].tint,
+                    borderColor: selectedColor,
+                    borderWidth: 2,
                   },
                 ]}
-                placeholder="Habit name"
+                placeholder="e.g., Exercise for 30 minutes"
                 placeholderTextColor={Colors[colorScheme ?? 'light'].tabIconDefault}
                 value={newHabitName}
                 onChangeText={setNewHabitName}
-                autoFocus
               />
               
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryPicker}>
-                {HABIT_CATEGORIES.map(cat => (
-                  <TouchableOpacity
-                    key={cat.value}
-                    onPress={() => setSelectedCategory(cat.value)}
-                    style={[
-                      styles.categoryChip,
-                      selectedCategory === cat.value && { backgroundColor: Colors[colorScheme ?? 'light'].tint },
-                    ]}>
-                    <IconSymbol
-                      name={cat.icon as any}
-                      size={16}
-                      color={selectedCategory === cat.value ? '#fff' : Colors[colorScheme ?? 'light'].text}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.categoryChipText,
-                        selectedCategory === cat.value && { color: '#fff' },
-                      ]}>
-                      {cat.label}
-                    </ThemedText>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <View style={styles.colorPicker}>
-                {HABIT_COLORS.map(color => (
-                  <TouchableOpacity
-                    key={color}
-                    onPress={() => setSelectedColor(color)}
-                    style={[
-                      styles.colorOption,
-                      { backgroundColor: color },
-                      selectedColor === color && styles.colorOptionSelected,
-                    ]}
-                  />
-                ))}
-              </View>
-              
+              {/* Create Button */}
               <TouchableOpacity
                 onPress={() => addHabit()}
-                style={[styles.saveButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
-                <Text style={styles.saveButtonText}>Add Habit</Text>
+                disabled={!newHabitName.trim()}
+                style={[
+                  styles.saveButton, 
+                  { backgroundColor: selectedColor },
+                  !newHabitName.trim() && { opacity: 0.5 },
+                ]}>
+                <IconSymbol name="plus" size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Create Habit</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -548,15 +566,17 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   saveButton: {
-    height: 48,
-    borderRadius: 8,
+    height: 52,
+    borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 8,
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   habitsList: {
     flex: 1,
@@ -810,5 +830,59 @@ const styles = StyleSheet.create({
     fontSize: 10,
     opacity: 0.6,
     marginTop: 2,
+  },
+  // New Swipeable Category Cards
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    opacity: 0.7,
+  },
+  categoryCardsContainer: {
+    marginBottom: 20,
+    marginHorizontal: -20,
+  },
+  categoryCardsContent: {
+    paddingHorizontal: 20,
+    gap: CARD_SPACING,
+  },
+  categoryCard: {
+    height: 120,
+    borderRadius: 16,
+    padding: 16,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  categoryCardSelected: {
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  categoryCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryCardLabel: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  categoryCardCheck: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
