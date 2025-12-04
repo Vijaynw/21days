@@ -2,21 +2,24 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { usePremium } from '@/contexts/PremiumContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Habit, HabitCategory } from '@/types/habit';
+import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate, isCompletedToday } from '@/utils/streaks';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Dimensions,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -58,6 +61,8 @@ export default function HabitsScreen() {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const colorScheme = useColorScheme();
+  const { canAddMoreHabits, isPremium, getHabitLimit } = usePremium();
+  const router = useRouter();
 
   useEffect(() => {
     loadHabits();
@@ -68,9 +73,37 @@ export default function HabitsScreen() {
     setHabits(loadedHabits);
   };
 
+  const handleAddHabitPress = () => {
+    if (!canAddMoreHabits(habits.length)) {
+      Alert.alert(
+        'Habit Limit Reached',
+        `Free users can track up to ${FREE_TIER_LIMITS.maxHabits} habits. Upgrade to Premium for unlimited habits!`,
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Go Premium', onPress: () => router.push('/premium') },
+        ]
+      );
+      return;
+    }
+    setIsAdding(!isAdding);
+  };
+
   const addHabit = async (template?: typeof HABIT_TEMPLATES[0]) => {
     const habitName = template ? template.name : newHabitName.trim();
     if (!habitName) return;
+
+    // Double-check premium status before adding
+    if (!canAddMoreHabits(habits.length)) {
+      Alert.alert(
+        'Habit Limit Reached',
+        `Upgrade to Premium for unlimited habits!`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Go Premium', onPress: () => router.push('/premium') },
+        ]
+      );
+      return;
+    }
     
     const newHabit: Habit = {
       id: Date.now().toString(),
@@ -277,11 +310,28 @@ export default function HabitsScreen() {
       </Modal>
 
       <View style={styles.header}>
-        <ThemedText type="title" style={styles.title}>
-          My Habits
-        </ThemedText>
+        <View style={styles.headerLeft}>
+          <ThemedText type="title" style={styles.title}>
+            My Habits
+          </ThemedText>
+          {!isPremium && (
+            <TouchableOpacity 
+              onPress={() => router.push('/premium')}
+              style={styles.limitBadge}>
+              <ThemedText style={styles.limitBadgeText}>
+                {habits.length}/{getHabitLimit()} habits
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+          {isPremium && (
+            <View style={[styles.premiumBadge, { backgroundColor: '#FFD700' }]}>
+              <IconSymbol name="crown.fill" size={12} color="#fff" />
+              <ThemedText style={styles.premiumBadgeText}>PRO</ThemedText>
+            </View>
+          )}
+        </View>
         <TouchableOpacity
-          onPress={() => setIsAdding(!isAdding)}
+          onPress={handleAddHabitPress}
           style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
           <IconSymbol name={isAdding ? 'xmark' : 'plus'} size={24} color={colorScheme !== 'dark' ? '#fff' : '#000'} />
         </TouchableOpacity>
@@ -526,8 +576,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
+  headerLeft: {
+    flex: 1,
+  },
   title: {
     fontSize: 32,
+  },
+  limitBadge: {
+    backgroundColor: 'rgba(78, 205, 196, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  limitBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4ECDC4',
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    gap: 4,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
   },
   addButton: {
     width: 44,
