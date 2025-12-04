@@ -2,10 +2,12 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { usePremium } from '@/contexts/PremiumContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Habit } from '@/types/habit';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Dimensions,
@@ -55,6 +57,10 @@ export default function ProgressScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
   const colorScheme = useColorScheme();
+  const { hasFeature } = usePremium();
+  const router = useRouter();
+  
+  const hasAdvancedAnalytics = hasFeature('hasAdvancedAnalytics');
 
   const loadData = useCallback(async () => {
     const loadedHabits = await storage.getHabits();
@@ -367,6 +373,33 @@ export default function ProgressScreen() {
             ))}
           </View>
         </View>
+
+        {/* Premium Upsell for Advanced Analytics */}
+        {!hasAdvancedAnalytics && (
+          <TouchableOpacity 
+            style={[styles.premiumUpsell, { backgroundColor: Colors[colorScheme ?? 'light'].tint + '15' }]}
+            onPress={() => router.push('/premium')}
+          >
+            <View style={styles.premiumUpsellContent}>
+              <View style={[styles.premiumUpsellIcon, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
+                <IconSymbol name="chart.bar.fill" size={24} color="#fff" />
+              </View>
+              <View style={styles.premiumUpsellText}>
+                <ThemedText type="defaultSemiBold" style={styles.premiumUpsellTitle}>
+                  Unlock Advanced Analytics
+                </ThemedText>
+                <ThemedText style={styles.premiumUpsellDescription}>
+                  Get detailed insights, trends, and personalized recommendations
+                </ThemedText>
+              </View>
+            </View>
+            <View style={[styles.premiumUpsellBadge, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
+              <ThemedText style={styles.premiumUpsellBadgeText}>PRO</ThemedText>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        <View style={{ height: 100 }} />
       </ScrollView>
     </ThemedView>
   );
@@ -531,5 +564,48 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
+  },
+  premiumUpsell: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  premiumUpsellContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  premiumUpsellIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumUpsellText: {
+    flex: 1,
+  },
+  premiumUpsellTitle: {
+    fontSize: 15,
+    marginBottom: 4,
+  },
+  premiumUpsellDescription: {
+    fontSize: 13,
+    opacity: 0.7,
+  },
+  premiumUpsellBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumUpsellBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
