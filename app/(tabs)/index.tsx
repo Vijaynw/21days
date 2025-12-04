@@ -19,12 +19,56 @@ import {
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
+const HABIT_CATEGORIES = [
+  { id: 'health', name: 'health', icon: '💪' },
+  { id: 'mindfulness', name: 'mindfulness', icon: '🧘' },
+  { id: 'learning', name: 'learning', icon: '📚' },
+  { id: 'productivity', name: 'productivity', icon: '⚡' },
+  { id: 'social', name: 'social', icon: '👥' },
+  { id: 'creative', name: 'creative', icon: '🎨' },
+];
+
 const HABIT_TEMPLATES = [
-  { name: 'sleep 8hrs', category: 'health' as HabitCategory },
-  { name: 'meditate', category: 'mindfulness' as HabitCategory },
-  { name: 'exercise', category: 'health' as HabitCategory },
-  { name: 'read', category: 'learning' as HabitCategory },
-  { name: 'drink water', category: 'health' as HabitCategory },
+  // Health
+  { name: 'sleep 8hrs', category: 'health' as HabitCategory, icon: '😴' },
+  { name: 'exercise', category: 'health' as HabitCategory, icon: '🏃' },
+  { name: 'drink water', category: 'health' as HabitCategory, icon: '💧' },
+  { name: 'take vitamins', category: 'health' as HabitCategory, icon: '💊' },
+  { name: 'stretch', category: 'health' as HabitCategory, icon: '🤸' },
+  { name: 'no junk food', category: 'health' as HabitCategory, icon: '🥗' },
+  { name: 'walk 10k steps', category: 'health' as HabitCategory, icon: '👟' },
+  
+  // Mindfulness
+  { name: 'meditate', category: 'mindfulness' as HabitCategory, icon: '🧘' },
+  { name: 'journal', category: 'mindfulness' as HabitCategory, icon: '📝' },
+  { name: 'gratitude', category: 'mindfulness' as HabitCategory, icon: '🙏' },
+  { name: 'deep breathing', category: 'mindfulness' as HabitCategory, icon: '🌬️' },
+  { name: 'no phone before bed', category: 'mindfulness' as HabitCategory, icon: '📵' },
+  
+  // Learning
+  { name: 'read 30 mins', category: 'learning' as HabitCategory, icon: '📖' },
+  { name: 'learn language', category: 'learning' as HabitCategory, icon: '🗣️' },
+  { name: 'practice coding', category: 'learning' as HabitCategory, icon: '💻' },
+  { name: 'watch tutorial', category: 'learning' as HabitCategory, icon: '🎓' },
+  { name: 'take notes', category: 'learning' as HabitCategory, icon: '✏️' },
+  
+  // Productivity
+  { name: 'wake up early', category: 'productivity' as HabitCategory, icon: '⏰' },
+  { name: 'plan tomorrow', category: 'productivity' as HabitCategory, icon: '📋' },
+  { name: 'inbox zero', category: 'productivity' as HabitCategory, icon: '📧' },
+  { name: 'no social media', category: 'productivity' as HabitCategory, icon: '🚫' },
+  { name: 'focus time', category: 'productivity' as HabitCategory, icon: '🎯' },
+  
+  // Social
+  { name: 'call family', category: 'social' as HabitCategory, icon: '📞' },
+  { name: 'meet a friend', category: 'social' as HabitCategory, icon: '🤝' },
+  { name: 'compliment someone', category: 'social' as HabitCategory, icon: '💬' },
+  
+  // Creative
+  { name: 'draw/sketch', category: 'creative' as HabitCategory, icon: '✏️' },
+  { name: 'play music', category: 'creative' as HabitCategory, icon: '🎸' },
+  { name: 'write', category: 'creative' as HabitCategory, icon: '✍️' },
+  { name: 'photography', category: 'creative' as HabitCategory, icon: '📷' },
 ];
 
 // Get week dates starting from Monday
@@ -47,6 +91,7 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const weekDates = getWeekDates();
