@@ -1,5 +1,4 @@
 import { usePremium } from '@/contexts/PremiumContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Habit, HabitCategory } from '@/types/habit';
 import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
@@ -7,14 +6,14 @@ import { formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -48,7 +47,6 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
-  const colorScheme = useColorScheme();
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const weekDates = getWeekDates();
@@ -120,6 +118,24 @@ export default function HabitsScreen() {
     return formatDate(date) === formatDate(today);
   };
 
+  const deleteHabit = (habitId: string) => {
+    Alert.alert(
+      'Delete Habit',
+      'Are you sure you want to delete this habit?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await storage.deleteHabit(habitId);
+            setHabits(habits.filter(h => h.id !== habitId));
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Header with + button */}
@@ -140,7 +156,16 @@ export default function HabitsScreen() {
         ) : (
           habits.map(habit => (
             <View key={habit.id} style={styles.habitCard}>
-              <Text style={styles.habitName}>{habit.name}</Text>
+              <View style={styles.habitHeader}>
+                <Text style={styles.habitName}>{habit.name}</Text>
+                <TouchableOpacity
+                  onPress={() => deleteHabit(habit.id)}
+                  style={styles.deleteButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
               
               {/* Month label */}
               <Text style={styles.monthLabel}>{currentMonth}</Text>
@@ -284,11 +309,28 @@ const styles = StyleSheet.create({
   habitCard: {
     marginBottom: 32,
   },
+  habitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   habitName: {
     fontSize: 22,
     fontWeight: '600',
     color: '#1a1a1a',
-    marginBottom: 16,
+    flex: 1,
+  },
+  deleteButton: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    fontSize: 24,
+    color: '#ccc',
+    fontWeight: '300',
   },
   monthLabel: {
     fontSize: 12,
