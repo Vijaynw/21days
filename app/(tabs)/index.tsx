@@ -9,6 +9,7 @@ import { calculateStreaks, formatDate, isCompletedToday } from '@/utils/streaks'
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +17,9 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const HABIT_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
@@ -46,6 +50,8 @@ export default function HabitsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('custom');
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<HabitCategory | 'all'>('all');
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [calendarDate, setCalendarDate] = useState(new Date());
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -146,8 +152,125 @@ export default function HabitsScreen() {
     return cat ? cat.icon : 'star.fill';
   };
 
+  // Calendar helpers
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(i);
+    return days;
+  };
+
+  const isDateCompleted = (day: number) => {
+    if (!selectedHabit) return false;
+    const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
+    return selectedHabit.completions.includes(dateStr);
+  };
+
+  const changeMonth = (direction: number) => {
+    const newDate = new Date(calendarDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setCalendarDate(newDate);
+  };
+
+  const openCalendar = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setCalendarDate(new Date());
+  };
+
+  const calendarDays = getDaysInMonth(calendarDate);
+
   return (
     <ThemedView style={styles.container}>
+      {/* Calendar Modal */}
+      <Modal
+        visible={selectedHabit !== null}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSelectedHabit(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={[styles.modalDot, { backgroundColor: selectedHabit?.color }]} />
+              <ThemedText type="subtitle" style={styles.modalTitle}>{selectedHabit?.name}</ThemedText>
+              <TouchableOpacity onPress={() => setSelectedHabit(null)}>
+                <IconSymbol name="xmark" size={24} color={Colors[colorScheme ?? 'light'].text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Month Navigation */}
+            <View style={styles.monthNav}>
+              <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.navButton}>
+                <IconSymbol name="chevron.left" size={24} color={selectedHabit?.color || Colors[colorScheme ?? 'light'].tint} />
+              </TouchableOpacity>
+              <ThemedText type="defaultSemiBold" style={styles.monthText}>
+                {MONTHS[calendarDate.getMonth()]} {calendarDate.getFullYear()}
+              </ThemedText>
+              <TouchableOpacity onPress={() => changeMonth(1)} style={styles.navButton}>
+                <IconSymbol name="chevron.right" size={24} color={selectedHabit?.color || Colors[colorScheme ?? 'light'].tint} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Day Headers */}
+            <View style={styles.dayHeaders}>
+              {DAYS.map(day => (
+                <View key={day} style={styles.dayHeader}>
+                  <ThemedText style={styles.dayHeaderText}>{day}</ThemedText>
+                </View>
+              ))}
+            </View>
+
+            {/* Calendar Grid */}
+            <View style={styles.daysGrid}>
+              {calendarDays.map((day, index) => (
+                <View key={index} style={styles.dayCell}>
+                  {day !== null && (
+                    <View style={[
+                      styles.dayCircle,
+                      isDateCompleted(day) && { backgroundColor: selectedHabit?.color },
+                    ]}>
+                      <ThemedText style={[
+                        styles.dayText,
+                        isDateCompleted(day) && styles.dayTextCompleted,
+                      ]}>
+                        {day}
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+
+            {/* Stats */}
+            {selectedHabit && (
+              <View style={styles.modalStats}>
+                <View style={[styles.modalStatCard, { borderLeftColor: selectedHabit.color }]}>
+                  <IconSymbol name="flame.fill" size={20} color={selectedHabit.color} />
+                  <ThemedText style={styles.modalStatValue}>{calculateStreaks(selectedHabit).currentStreak}</ThemedText>
+                  <ThemedText style={styles.modalStatLabel}>Current Streak</ThemedText>
+                </View>
+                <View style={[styles.modalStatCard, { borderLeftColor: selectedHabit.color }]}>
+                  <IconSymbol name="trophy.fill" size={20} color={selectedHabit.color} />
+                  <ThemedText style={styles.modalStatValue}>{calculateStreaks(selectedHabit).longestStreak}</ThemedText>
+                  <ThemedText style={styles.modalStatLabel}>Best Streak</ThemedText>
+                </View>
+                <View style={[styles.modalStatCard, { borderLeftColor: selectedHabit.color }]}>
+                  <IconSymbol name="checkmark.circle.fill" size={20} color={selectedHabit.color} />
+                  <ThemedText style={styles.modalStatValue}>{selectedHabit.completions.length}</ThemedText>
+                  <ThemedText style={styles.modalStatLabel}>Total Days</ThemedText>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>
           My Habits
@@ -155,7 +278,7 @@ export default function HabitsScreen() {
         <TouchableOpacity
           onPress={() => setIsAdding(!isAdding)}
           style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
-          <IconSymbol name={isAdding ? 'xmark' : 'plus'} size={24} color="#fff" />
+          <IconSymbol name={isAdding ? 'xmark' : 'plus'} size={24} color={colorScheme !== 'dark' ? '#fff' : '#000'} />
         </TouchableOpacity>
       </View>
 
@@ -353,6 +476,11 @@ export default function HabitsScreen() {
                       </View>
                     </View>
                   </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => openCalendar(habit)}
+                  style={styles.calendarButton}>
+                  <IconSymbol name="calendar" size={20} color={habit.color} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => deleteHabit(habit.id)}
@@ -580,5 +708,107 @@ const styles = StyleSheet.create({
   },
   categoryIcon: {
     marginLeft: 4,
+  },
+  calendarButton: {
+    padding: 8,
+    marginRight: 4,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+  },
+  modalDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: 18,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  navButton: {
+    padding: 8,
+  },
+  monthText: {
+    fontSize: 18,
+  },
+  dayHeaders: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  dayHeader: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dayHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.6,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    padding: 2,
+  },
+  dayCircle: {
+    flex: 1,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+  },
+  dayText: {
+    fontSize: 14,
+  },
+  dayTextCompleted: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  modalStats: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  modalStatCard: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    borderLeftWidth: 3,
+    alignItems: 'center',
+  },
+  modalStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  modalStatLabel: {
+    fontSize: 10,
+    opacity: 0.6,
+    marginTop: 2,
   },
 });
