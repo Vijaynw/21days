@@ -48,6 +48,7 @@ export default function TabLayout() {
       {/* Hidden tabs */}
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="premium" options={{ href: null }} />
+      <Tabs.Screen name="index-old" options={{ href: null }} />
     </Tabs>
   );
 }

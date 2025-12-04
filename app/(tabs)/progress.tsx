@@ -1,6 +1,7 @@
 import { Habit } from '@/types/habit';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -27,6 +28,12 @@ export default function ProgressScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   // Calculate stats
   const getTotalCompletions = () => {

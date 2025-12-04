@@ -269,18 +269,48 @@ export default function HabitsScreen() {
               autoFocus
             />
             
-            <Text style={styles.suggestionsTitle}>suggestions</Text>
-            <View style={styles.suggestions}>
-              {HABIT_TEMPLATES.map((template, index) => (
+            {/* Category Filter */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoryScroll}
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              <TouchableOpacity
+                style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(null)}
+              >
+                <Text style={[styles.categoryChipText, !selectedCategory && styles.categoryChipTextActive]}>all</Text>
+              </TouchableOpacity>
+              {HABIT_CATEGORIES.map((cat) => (
                 <TouchableOpacity
-                  key={index}
-                  style={styles.suggestionChip}
-                  onPress={() => addHabit(template.name)}
+                  key={cat.id}
+                  style={[styles.categoryChip, selectedCategory === cat.id && styles.categoryChipActive]}
+                  onPress={() => setSelectedCategory(cat.id)}
                 >
-                  <Text style={styles.suggestionText}>{template.name}</Text>
+                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                  <Text style={[styles.categoryChipText, selectedCategory === cat.id && styles.categoryChipTextActive]}>{cat.name}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
+
+            <Text style={styles.suggestionsTitle}>suggestions</Text>
+            <ScrollView style={styles.suggestionsScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.suggestions}>
+                {HABIT_TEMPLATES
+                  .filter(t => !selectedCategory || t.category === selectedCategory)
+                  .map((template, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.suggestionChip}
+                      onPress={() => addHabit(template.name)}
+                    >
+                      <Text style={styles.suggestionIcon}>{template.icon}</Text>
+                      <Text style={styles.suggestionText}>{template.name}</Text>
+                </TouchableOpacity>
+                  ))}
+              </View>
+            </ScrollView>
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -447,28 +477,67 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     fontSize: 18,
     paddingVertical: 12,
-    marginBottom: 24,
+    marginBottom: 16,
     color: '#1a1a1a',
+  },
+  categoryScroll: {
+    marginHorizontal: -24,
+    marginBottom: 16,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 4,
+  },
+  categoryChipActive: {
+    backgroundColor: '#1a1a1a',
+  },
+  categoryChipText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  categoryChipTextActive: {
+    color: '#fff',
+  },
+  categoryIcon: {
+    fontSize: 14,
   },
   suggestionsTitle: {
     fontSize: 12,
     color: '#999',
     marginBottom: 12,
   },
+  suggestionsScroll: {
+    maxHeight: 200,
+    marginBottom: 16,
+  },
   suggestions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 24,
   },
   suggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
+    gap: 6,
+  },
+  suggestionIcon: {
+    fontSize: 14,
   },
   suggestionText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#1a1a1a',
   },
   modalButtons: {
