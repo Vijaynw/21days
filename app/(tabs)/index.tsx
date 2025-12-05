@@ -6,14 +6,14 @@ import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -304,9 +304,13 @@ export default function HabitsScreen() {
                           style={[styles.dayColumn, { opacity: fadeOpacity }]}
                           onPress={(e) => {
                             e.stopPropagation();
-                            if (today) toggleCompletion(habit, date);
+                            if (today) {
+                              toggleCompletion(habit, date);
+                            } else {
+                              router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } });
+                            }
                           }}
-                          activeOpacity={today ? 0.7 : 1}
+                          activeOpacity={0.7}
                         >
                           <View
                             style={[

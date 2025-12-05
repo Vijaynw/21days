@@ -129,9 +129,12 @@ export default function ProfileScreen() {
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={styles.settingIcon}>📤</Text>
-            <Text style={styles.settingText}>export data</Text>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/settings')}
+          >
+            <Text style={styles.settingIcon}>⚙️</Text>
+            <Text style={styles.settingText}>settings</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
         </View>
