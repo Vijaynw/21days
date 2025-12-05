@@ -65,11 +65,7 @@ export default function HabitDetailScreen() {
     return habit.completions.includes(dateStr);
   };
 
-  const isDatePartial = (day: number) => {
-    const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
-    return (habit.partialCompletions || []).includes(dateStr);
-  };
-
+  
   const changeMonth = (direction: number) => {
     const newDate = new Date(calendarDate);
     newDate.setMonth(newDate.getMonth() + direction);
@@ -82,19 +78,13 @@ export default function HabitDetailScreen() {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     let full = 0;
-    let partial = 0;
     
     habit.completions.forEach(dateStr => {
       const date = new Date(dateStr);
       if (date.getFullYear() === year && date.getMonth() === month) full++;
     });
     
-    (habit.partialCompletions || []).forEach(dateStr => {
-      const date = new Date(dateStr);
-      if (date.getFullYear() === year && date.getMonth() === month) partial++;
-    });
-    
-    return { full, partial };
+    return { full };
   };
 
   const monthStats = getMonthCompletions();
@@ -162,14 +152,12 @@ export default function HabitDetailScreen() {
                   <View
                     style={[
                       styles.dayCircle,
-                      isDatePartial(day) && styles.dayCirclePartial,
                       isDateCompleted(day) && styles.dayCircleCompleted,
                     ]}
                   >
                     <Text
                       style={[
                         styles.dayText,
-                        isDatePartial(day) && styles.dayTextPartial,
                         isDateCompleted(day) && styles.dayTextCompleted,
                       ]}
                     >
@@ -185,10 +173,6 @@ export default function HabitDetailScreen() {
             <View style={styles.summaryItem}>
               <View style={[styles.summaryDot, styles.summaryDotFull]} />
               <Text style={styles.summaryText}>{monthStats.full} completed</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <View style={[styles.summaryDot, styles.summaryDotPartial]} />
-              <Text style={styles.summaryText}>{monthStats.partial} partial</Text>
             </View>
           </View>
         </View>
@@ -336,20 +320,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  dayCirclePartial: {
-    backgroundColor: '#e0e0e0',
-    borderWidth: 1,
-    borderColor: '#1a1a1a',
-  },
   dayCircleCompleted: {
     backgroundColor: '#1a1a1a',
   },
   dayText: {
     fontSize: 14,
     color: '#666',
-  },
-  dayTextPartial: {
-    color: '#1a1a1a',
   },
   dayTextCompleted: {
     color: '#fff',
@@ -376,11 +352,6 @@ const styles = StyleSheet.create({
   },
   summaryDotFull: {
     backgroundColor: '#1a1a1a',
-  },
-  summaryDotPartial: {
-    backgroundColor: '#e0e0e0',
-    borderWidth: 1,
-    borderColor: '#1a1a1a',
   },
   summaryText: {
     fontSize: 12,

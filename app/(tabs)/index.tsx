@@ -118,7 +118,6 @@ export default function HabitsScreen() {
       color: '#1a1a1a',
       createdAt: new Date().toISOString(),
       completions: [],
-      partialCompletions: [],
     };
 
     await storage.addHabit(newHabit);
@@ -127,30 +126,17 @@ export default function HabitsScreen() {
     setIsAdding(false);
   };
 
-  // Feature 1: Partial completion (none -> partial -> full -> none)
   const toggleCompletion = async (habit: Habit, date: Date) => {
     const dateStr = formatDate(date);
-    const fullCompletions = habit.completions || [];
-    const partialCompletions = habit.partialCompletions || [];
-    const isFull = fullCompletions.includes(dateStr);
-    const isPartial = partialCompletions.includes(dateStr);
-    let newFull = fullCompletions;
-    let newPartial = partialCompletions;
+    const isCompleted = habit.completions.includes(dateStr);
 
-    if (!isFull && !isPartial) {
-      newPartial = [...partialCompletions, dateStr];
-    } else if (isPartial) {
-      newPartial = partialCompletions.filter(d => d !== dateStr);
-      newFull = [...fullCompletions, dateStr];
-    } else if (isFull) {
-      newFull = fullCompletions.filter(d => d !== dateStr);
-    }
-
-    const updatedHabit: Habit = {
+    const updatedHabit = {
       ...habit,
-      completions: newFull,
-      partialCompletions: newPartial,
+      completions: isCompleted
+        ? habit.completions.filter(d => d !== dateStr)
+        : [...habit.completions, dateStr],
     };
+
     await storage.updateHabit(updatedHabit);
     setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
   };
@@ -159,10 +145,7 @@ export default function HabitsScreen() {
     return habit.completions.includes(formatDate(date));
   };
 
-  const isDatePartial = (habit: Habit, date: Date) => {
-    return (habit.partialCompletions || []).includes(formatDate(date));
-  };
-
+  
   const isToday = (date: Date) => {
     const today = new Date();
     return formatDate(date) === formatDate(today);
@@ -184,7 +167,6 @@ export default function HabitsScreen() {
         date.setDate(weekAgo.getDate() + i);
         const dateStr = formatDate(date);
         if (habit.completions.includes(dateStr)) totalScore += 1;
-        else if ((habit.partialCompletions || []).includes(dateStr)) totalScore += 0.5;
       }
     });
     return totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
@@ -291,7 +273,6 @@ export default function HabitsScreen() {
                   >
                     {timelineDates.map((date) => {
                       const completed = isDateCompleted(habit, date);
-                      const partial = isDatePartial(habit, date);
                       const today = isToday(date);
                       const dayIndex = (date.getDay() + 6) % 7;
                       const daysAgo = getDaysAgo(date);
@@ -315,15 +296,13 @@ export default function HabitsScreen() {
                           <View
                             style={[
                               styles.dayDot,
-                              partial && styles.dayDotPartial,
                               completed && styles.dayDotCompleted,
-                              today && !completed && !partial && styles.dayDotToday,
+                              today && !completed && styles.dayDotToday,
                             ]}
                           >
                             <Text
                               style={[
                                 styles.dayNumber,
-                                partial && styles.dayNumberPartial,
                                 completed && styles.dayNumberCompleted,
                               ]}
                             >
@@ -573,12 +552,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  // Feature 1: Partial completion style
-  dayDotPartial: {
-    backgroundColor: '#e0e0e0',
-    borderWidth: 1,
-    borderColor: '#1a1a1a',
-  },
   dayDotCompleted: {
     backgroundColor: '#1a1a1a',
   },
@@ -591,9 +564,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#666',
-  },
-  dayNumberPartial: {
-    color: '#1a1a1a',
   },
   dayNumberCompleted: {
     color: '#fff',

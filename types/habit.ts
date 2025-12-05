@@ -15,7 +15,6 @@ export interface Habit {
   color: string;
   createdAt: string;
   completions: string[]; // Array of ISO date strings (YYYY-MM-DD)
-  partialCompletions?: string[]; // Dates with partial completion
   reminderTime?: string; // HH:MM format
   notes?: { [date: string]: string }; // Notes per date
 }
