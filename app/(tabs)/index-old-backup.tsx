@@ -2,18 +2,18 @@ import { usePremium } from '@/contexts/PremiumContext';
 import { Habit, HabitCategory } from '@/types/habit';
 import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
-import { calculateStreaks, formatDate } from '@/utils/streaks';
+import { formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -29,6 +29,7 @@ const HABIT_CATEGORIES = [
 ];
 
 const HABIT_TEMPLATES = [
+  // Health
   { name: 'sleep 8hrs', category: 'health' as HabitCategory, icon: '😴' },
   { name: 'exercise', category: 'health' as HabitCategory, icon: '🏃' },
   { name: 'drink water', category: 'health' as HabitCategory, icon: '💧' },
@@ -36,39 +37,51 @@ const HABIT_TEMPLATES = [
   { name: 'stretch', category: 'health' as HabitCategory, icon: '🤸' },
   { name: 'no junk food', category: 'health' as HabitCategory, icon: '🥗' },
   { name: 'walk 10k steps', category: 'health' as HabitCategory, icon: '👟' },
+  
+  // Mindfulness
   { name: 'meditate', category: 'mindfulness' as HabitCategory, icon: '🧘' },
   { name: 'journal', category: 'mindfulness' as HabitCategory, icon: '📝' },
   { name: 'gratitude', category: 'mindfulness' as HabitCategory, icon: '🙏' },
   { name: 'deep breathing', category: 'mindfulness' as HabitCategory, icon: '🌬️' },
   { name: 'no phone before bed', category: 'mindfulness' as HabitCategory, icon: '📵' },
+  
+  // Learning
   { name: 'read 30 mins', category: 'learning' as HabitCategory, icon: '📖' },
   { name: 'learn language', category: 'learning' as HabitCategory, icon: '🗣️' },
   { name: 'practice coding', category: 'learning' as HabitCategory, icon: '💻' },
   { name: 'watch tutorial', category: 'learning' as HabitCategory, icon: '🎓' },
   { name: 'take notes', category: 'learning' as HabitCategory, icon: '✏️' },
+  
+  // Productivity
   { name: 'wake up early', category: 'productivity' as HabitCategory, icon: '⏰' },
   { name: 'plan tomorrow', category: 'productivity' as HabitCategory, icon: '📋' },
   { name: 'inbox zero', category: 'productivity' as HabitCategory, icon: '📧' },
   { name: 'no social media', category: 'productivity' as HabitCategory, icon: '🚫' },
   { name: 'focus time', category: 'productivity' as HabitCategory, icon: '🎯' },
+  
+  // Social
   { name: 'call family', category: 'social' as HabitCategory, icon: '📞' },
   { name: 'meet a friend', category: 'social' as HabitCategory, icon: '🤝' },
   { name: 'compliment someone', category: 'social' as HabitCategory, icon: '💬' },
+  
+  // Creative
   { name: 'draw/sketch', category: 'creative' as HabitCategory, icon: '✏️' },
   { name: 'play music', category: 'creative' as HabitCategory, icon: '🎸' },
   { name: 'write', category: 'creative' as HabitCategory, icon: '✍️' },
   { name: 'photography', category: 'creative' as HabitCategory, icon: '📷' },
 ];
 
-// Feature 2: Scrollable past dates timeline
-const getTimelineDates = () => {
+// Get week dates starting from Monday
+const getWeekDates = () => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dates: Date[] = [];
-  const range = 14;
-  for (let i = -range; i <= 0; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
     dates.push(date);
   }
   return dates;
@@ -81,7 +94,7 @@ export default function HabitsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
-  const timelineDates = getTimelineDates();
+  const weekDates = getWeekDates();
   const currentMonth = MONTHS_SHORT[new Date().getMonth()];
 
   useEffect(() => {
@@ -118,7 +131,6 @@ export default function HabitsScreen() {
       color: '#1a1a1a',
       createdAt: new Date().toISOString(),
       completions: [],
-      partialCompletions: [],
     };
 
     await storage.addHabit(newHabit);
@@ -127,30 +139,17 @@ export default function HabitsScreen() {
     setIsAdding(false);
   };
 
-  // Feature 1: Partial completion (none -> partial -> full -> none)
   const toggleCompletion = async (habit: Habit, date: Date) => {
     const dateStr = formatDate(date);
-    const fullCompletions = habit.completions || [];
-    const partialCompletions = habit.partialCompletions || [];
-    const isFull = fullCompletions.includes(dateStr);
-    const isPartial = partialCompletions.includes(dateStr);
-    let newFull = fullCompletions;
-    let newPartial = partialCompletions;
+    const isCompleted = habit.completions.includes(dateStr);
 
-    if (!isFull && !isPartial) {
-      newPartial = [...partialCompletions, dateStr];
-    } else if (isPartial) {
-      newPartial = partialCompletions.filter(d => d !== dateStr);
-      newFull = [...fullCompletions, dateStr];
-    } else if (isFull) {
-      newFull = fullCompletions.filter(d => d !== dateStr);
-    }
-
-    const updatedHabit: Habit = {
+    const updatedHabit = {
       ...habit,
-      completions: newFull,
-      partialCompletions: newPartial,
+      completions: isCompleted
+        ? habit.completions.filter(d => d !== dateStr)
+        : [...habit.completions, dateStr],
     };
+
     await storage.updateHabit(updatedHabit);
     setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
   };
@@ -159,44 +158,9 @@ export default function HabitsScreen() {
     return habit.completions.includes(formatDate(date));
   };
 
-  const isDatePartial = (habit: Habit, date: Date) => {
-    return (habit.partialCompletions || []).includes(formatDate(date));
-  };
-
   const isToday = (date: Date) => {
     const today = new Date();
     return formatDate(date) === formatDate(today);
-  };
-
-  // Feature 3: Streak badge
-  const getCurrentStreak = (habit: Habit) => calculateStreaks(habit).currentStreak;
-
-  // Feature 4: Weekly progress widget
-  const getWeekProgress = () => {
-    const today = new Date();
-    const weekAgo = new Date(today);
-    weekAgo.setDate(today.getDate() - 6);
-    let totalPossible = habits.length * 7;
-    let totalScore = 0;
-    habits.forEach(habit => {
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(weekAgo);
-        date.setDate(weekAgo.getDate() + i);
-        const dateStr = formatDate(date);
-        if (habit.completions.includes(dateStr)) totalScore += 1;
-        else if ((habit.partialCompletions || []).includes(dateStr)) totalScore += 0.5;
-      }
-    });
-    return totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
-  };
-
-  // Feature 5: Fade past days
-  const getDaysAgo = (date: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
-    return Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   const deleteHabit = (habitId: string) => {
@@ -219,6 +183,7 @@ export default function HabitsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header with + button */}
       <View style={styles.header}>
         <View style={styles.headerSpacer} />
         <TouchableOpacity onPress={handleAddHabitPress} style={styles.addButton}>
@@ -226,6 +191,7 @@ export default function HabitsScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Habits List */}
       <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false}>
         {habits.length === 0 ? (
           <View style={styles.emptyState}>
@@ -233,112 +199,62 @@ export default function HabitsScreen() {
             <Text style={styles.emptySubtitle}>your habit.</Text>
           </View>
         ) : (
-          <>
-            {/* Feature 4: Weekly Summary Widget */}
-            <View style={styles.widget}>
-              <View style={styles.widgetRow}>
-                <View style={styles.widgetSection}>
-                  <Text style={styles.widgetTitle}>today</Text>
-                  <Text style={styles.widgetNumber}>
-                    {habits.filter(h => h.completions.includes(formatDate(new Date()))).length}/{habits.length}
-                  </Text>
-                </View>
-                <View style={styles.widgetDivider} />
-                <View style={styles.widgetSection}>
-                  <Text style={styles.widgetTitle}>this week</Text>
-                  <Text style={styles.widgetNumber}>{getWeekProgress()}%</Text>
-                </View>
+          habits.map(habit => (
+            <View key={habit.id} style={styles.habitCard}>
+              <View style={styles.habitHeader}>
+                <Text style={styles.habitName}>{habit.name}</Text>
+                <TouchableOpacity
+                  onPress={() => deleteHabit(habit.id)}
+                  style={styles.deleteButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Month label */}
+              <Text style={styles.monthLabel}>{currentMonth}</Text>
+              
+              {/* Week Calendar */}
+              <View style={styles.weekRow}>
+                {weekDates.map((date, index) => {
+                  const completed = isDateCompleted(habit, date);
+                  const today = isToday(date);
+                  
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.dayColumn}
+                      onPress={() => toggleCompletion(habit, date)}
+                    >
+                      <View
+                        style={[
+                          styles.dayDot,
+                          completed && styles.dayDotCompleted,
+                          today && !completed && styles.dayDotToday,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.dayNumber,
+                            completed && styles.dayNumberCompleted,
+                          ]}
+                        >
+                          {date.getDate()}
+                        </Text>
+                      </View>
+                      <Text style={styles.dayLabel}>{DAYS_SHORT[index]}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
-
-            {habits.map(habit => {
-              const streak = getCurrentStreak(habit);
-              return (
-                <TouchableOpacity
-                  key={habit.id}
-                  style={styles.habitCard}
-                  onPress={() => router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } })}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.habitHeader}>
-                    <View style={styles.habitNameRow}>
-                      <Text style={styles.habitName}>{habit.name}</Text>
-                      {/* Feature 3: Streak Badge */}
-                      {streak > 0 && (
-                        <View style={styles.streakBadge}>
-                          <Text style={styles.streakIcon}>🔥</Text>
-                          <Text style={styles.streakText}>{streak}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => deleteHabit(habit.id)}
-                      style={styles.deleteButton}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Text style={styles.deleteButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <Text style={styles.monthLabel}>{currentMonth}</Text>
-
-                  {/* Feature 2: Scrollable Date Timeline */}
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.weekRow}
-                    contentContainerStyle={styles.weekRowContent}
-                  >
-                    {timelineDates.map((date) => {
-                      const completed = isDateCompleted(habit, date);
-                      const partial = isDatePartial(habit, date);
-                      const today = isToday(date);
-                      const dayIndex = (date.getDay() + 6) % 7;
-                      const daysAgo = getDaysAgo(date);
-                      // Feature 5: Fade past days
-                      const fadeOpacity = today ? 1 : Math.max(0.4, 1 - daysAgo * 0.04);
-
-                      return (
-                        <TouchableOpacity
-                          key={formatDate(date)}
-                          style={[styles.dayColumn, { opacity: fadeOpacity }]}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            if (today) toggleCompletion(habit, date);
-                          }}
-                          activeOpacity={today ? 0.7 : 1}
-                        >
-                          <View
-                            style={[
-                              styles.dayDot,
-                              partial && styles.dayDotPartial,
-                              completed && styles.dayDotCompleted,
-                              today && !completed && !partial && styles.dayDotToday,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.dayNumber,
-                                partial && styles.dayNumberPartial,
-                                completed && styles.dayNumberCompleted,
-                              ]}
-                            >
-                              {date.getDate()}
-                            </Text>
-                          </View>
-                          <Text style={styles.dayLabel}>{DAYS_SHORT[dayIndex]}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-                </TouchableOpacity>
-              );
-            })}
-          </>
+          ))
         )}
         <View style={{ height: 100 }} />
       </ScrollView>
 
+      {/* Add Habit Modal */}
       <Modal visible={isAdding} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -353,6 +269,7 @@ export default function HabitsScreen() {
               autoFocus
             />
             
+            {/* Category Filter */}
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
@@ -390,7 +307,7 @@ export default function HabitsScreen() {
                     >
                       <Text style={styles.suggestionIcon}>{template.icon}</Text>
                       <Text style={styles.suggestionText}>{template.name}</Text>
-                    </TouchableOpacity>
+                </TouchableOpacity>
                   ))}
               </View>
             </ScrollView>
@@ -464,36 +381,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
   },
-  // Feature 4: Widget styles
-  widget: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-  },
-  widgetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  widgetSection: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  widgetDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#e0e0e0',
-  },
-  widgetTitle: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
-  },
-  widgetNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
   habitCard: {
     marginBottom: 32,
   },
@@ -503,34 +390,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  habitNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
   habitName: {
     fontSize: 22,
     fontWeight: '600',
     color: '#1a1a1a',
-  },
-  // Feature 3: Streak badge styles
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff3e0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 2,
-  },
-  streakIcon: {
-    fontSize: 12,
-  },
-  streakText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#ff9800',
+    flex: 1,
   },
   deleteButton: {
     width: 28,
@@ -549,16 +413,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginLeft: 4,
   },
-  // Feature 2: Scrollable timeline styles
   weekRow: {
     flexDirection: 'row',
-  },
-  weekRowContent: {
-    paddingRight: 24,
-    gap: 12,
+    justifyContent: 'space-between',
   },
   dayColumn: {
     alignItems: 'center',
+    flex: 1,
   },
   dayDot: {
     width: 36,
@@ -568,12 +429,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
-  },
-  // Feature 1: Partial completion style
-  dayDotPartial: {
-    backgroundColor: '#e0e0e0',
-    borderWidth: 1,
-    borderColor: '#1a1a1a',
   },
   dayDotCompleted: {
     backgroundColor: '#1a1a1a',
@@ -588,9 +443,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#666',
   },
-  dayNumberPartial: {
-    color: '#1a1a1a',
-  },
   dayNumberCompleted: {
     color: '#fff',
   },
@@ -599,6 +451,7 @@ const styles = StyleSheet.create({
     color: '#999',
     fontWeight: '500',
   },
+  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
