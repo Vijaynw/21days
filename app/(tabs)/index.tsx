@@ -232,10 +232,7 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
-        <TouchableOpacity onPress={handleAddHabitPress} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>My Habits</Text>
       </View>
 
       <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false}>
@@ -562,10 +559,10 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   headerSpacer: {
@@ -951,5 +948,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+    title: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#1a1a1a',
+    textAlign:"left"
   },
 });

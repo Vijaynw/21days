@@ -2,7 +2,7 @@ import { Habit } from '@/types/habit';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   title: {

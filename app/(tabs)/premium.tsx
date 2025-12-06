@@ -5,16 +5,16 @@ import { Colors } from '@/constants/theme';
 import { usePremium } from '@/contexts/PremiumContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PREMIUM_FEATURES, PRICING_PLANS, PricingPlan } from '@/types/premium';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Linking,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function PremiumScreen() {
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 24,
   },
   crownBadge: {
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   // Premium user styles
   premiumHeader: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 32,
   },
   premiumTitle: {

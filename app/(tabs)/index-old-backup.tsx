@@ -4,7 +4,7 @@ import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
 import { formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   headerSpacer: {
