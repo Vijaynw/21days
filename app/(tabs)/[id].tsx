@@ -2,11 +2,13 @@ import { Habit } from '@/types/habit';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -19,15 +21,44 @@ export default function HabitDetailScreen() {
   const router = useRouter();
   const [habit, setHabit] = useState<Habit | null>(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+
+  const loadHabit = useCallback(async () => {
+    const habits = await storage.getHabits();
+    const found = habits.find(h => h.id === id);
+    if (found) {
+      setHabit(found);
+      setEditedName(found.name);
+    }
+  }, [id]);
 
   useEffect(() => {
     loadHabit();
-  }, [id]);
+  }, [loadHabit]);
 
-  const loadHabit = async () => {
-    const habits = await storage.getHabits();
-    const found = habits.find(h => h.id === id);
-    if (found) setHabit(found);
+  const handleSaveName = async () => {
+    if (!habit) return;
+    const trimmed = editedName.trim();
+
+    if (!trimmed) {
+      Alert.alert('Name required', 'Please enter a valid habit name.');
+      return;
+    }
+
+    const updatedHabit = { ...habit, name: trimmed };
+    await storage.updateHabit(updatedHabit);
+    setHabit(updatedHabit);
+    setIsEditingName(false);
+  };
+
+  const toggleEditing = () => {
+    if (isEditingName) {
+      handleSaveName();
+    } else {
+      setEditedName(habit?.name ?? '');
+      setIsEditingName(true);
+    }
   };
 
   if (!habit) {
@@ -95,8 +126,24 @@ export default function HabitDetailScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{habit.name}</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerTitleWrapper}>
+          {isEditingName ? (
+            <TextInput
+              style={styles.titleInput}
+              value={editedName}
+              onChangeText={setEditedName}
+              placeholder="Habit name"
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSaveName}
+            />
+          ) : (
+            <Text style={styles.headerTitle}>{habit.name}</Text>
+          )}
+        </View>
+        <TouchableOpacity onPress={toggleEditing} style={styles.editButton}>
+          <Text style={styles.editButtonText}>{isEditingName ? 'save' : 'edit'}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -225,8 +272,30 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     textAlign: 'center',
   },
-  headerSpacer: {
-    width: 40,
+  headerTitleWrapper: {
+    flex: 1,
+    paddingHorizontal: 12,
+  },
+  titleInput: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#1a1a1a',
+    backgroundColor: '#fff',
+  },
+  editButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a1a1a',
   },
   loadingContainer: {
     flex: 1,

@@ -4,7 +4,7 @@ import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -260,7 +260,7 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
                 <TouchableOpacity
                   key={habit.id}
                   style={styles.habitCard}
-                  onPress={() => router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } })}
+                  onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}
                   activeOpacity={0.8}
                 >
                   <View style={styles.habitHeader}>
