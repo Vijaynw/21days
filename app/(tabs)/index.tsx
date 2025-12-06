@@ -80,12 +80,6 @@ const getTimelineDates = () => {
 };
 
 // Helper to get current date index for centering
-const getCurrentDateIndex = () => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return 14; // Since we have 15 dates total (0-14), today is at index 14
-};
-
 export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -98,7 +92,7 @@ export default function HabitsScreen() {
   const router = useRouter();
   const timelineDates = getTimelineDates();
   const currentMonth = MONTHS_SHORT[new Date().getMonth()];
-const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
+  const [dailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
   useEffect(() => {
     loadHabits();
   }, []);
@@ -145,7 +139,7 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
     setIsAdding(true);
   };
 
-  const addHabit = async (template: any) => {
+  const addHabit = async (template: { name: string; category: HabitCategory; icon: string } | null = null) => {
     const habitName = template?.name || newHabitName.trim();
     if (!habitName) return;
 
@@ -191,24 +185,6 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
 
   // Feature 3: Streak badge
   const getCurrentStreak = (habit: Habit) => calculateStreaks(habit).currentStreak;
-
-  // Feature 4: Weekly progress widget
-  const getWeekProgress = () => {
-    const today = new Date();
-    const weekAgo = new Date(today);
-    weekAgo.setDate(today.getDate() - 6);
-    let totalPossible = habits.length * 7;
-    let totalScore = 0;
-    habits.forEach(habit => {
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(weekAgo);
-        date.setDate(weekAgo.getDate() + i);
-        const dateStr = formatDate(date);
-        if (habit.completions.includes(dateStr)) totalScore += 1;
-      }
-    });
-    return totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
-  };
 
   // Feature 5: Fade past days
   const getDaysAgo = (date: Date) => {
