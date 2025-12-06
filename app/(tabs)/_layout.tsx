@@ -1,10 +1,24 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { storage } from '@/utils/storage';
+import { Tabs, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 export default function TabLayout() {
+  const [hasHabits, setHasHabits] = useState(false);
+
+  const refreshHabits = useCallback(async () => {
+    const habits = await storage.getHabits();
+    setHasHabits(habits.length > 0);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshHabits();
+    }, [refreshHabits])
+  );
+
   return (
     <Tabs
       screenOptions={{
@@ -50,13 +64,15 @@ export default function TabLayout() {
 ),
         }}
       />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
-        }}
-      />
+       
+        <Tabs.Screen
+          name="progress"
+          options={{
+            title: '',
+            tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
+          }}
+        />
+      
       <Tabs.Screen
         name="profile"
         options={{
@@ -69,6 +85,7 @@ export default function TabLayout() {
       <Tabs.Screen name="premium" options={{ href: null }} />
       <Tabs.Screen name="index-old" options={{ href: null }} />
       <Tabs.Screen name="index-old-backup" options={{ href: null }} />
+      <Tabs.Screen name="[id]" options={{ href: null }} />
     </Tabs>
   );
 }
