@@ -39,7 +39,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {hasHabits && (
         <Tabs.Screen
           name="progress"
           options={{
@@ -49,7 +48,6 @@ export default function TabLayout() {
             ),
           }}
         />
-      )}
       <Tabs.Screen
         name="profile"
         options={{

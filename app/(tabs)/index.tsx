@@ -238,21 +238,7 @@ export default function HabitsScreen() {
         <Text style={styles.title}>My Habits</Text>
       </View>
 
-      <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false}>
-        {habits.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>track</Text>
-            <Text style={styles.emptySubtitle}>your habit.</Text>
-            
-            <View style={styles.quoteCard}>
-              <Text style={styles.quoteText}>&ldquo;{dailyQuote.text}&rdquo;</Text>
-              <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
-            </View>
-          </View>
-          
-        ) : (
-          <>
-            {/* Feature 4: Weekly Summary Widget */}
+                  {/* Feature 4: Weekly Summary Widget */}
             <View style={styles.widget}>
               <View style={styles.widgetRow}>
                 <View style={styles.widgetSection}>
@@ -268,6 +254,22 @@ export default function HabitsScreen() {
                 </View> */}
               </View>
             </View>
+
+      <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false}>
+        {habits.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>track</Text>
+            <Text style={styles.emptySubtitle}>your habit.</Text>
+            
+            <View style={styles.quoteCard}>
+              <Text style={styles.quoteText}>&ldquo;{dailyQuote.text}&rdquo;</Text>
+              <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
+            </View>
+          </View>
+          
+        ) : (
+          <>
+
 
              
 
@@ -364,7 +366,7 @@ export default function HabitsScreen() {
             })}
           </>
         )}
-        <View style={{ height: 100 }} />
+        {/* <View style={{ height: 100 }} /> */}
       </ScrollView>
 
       <Modal visible={isAdding} transparent animationType="fade">

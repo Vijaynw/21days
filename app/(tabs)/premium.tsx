@@ -35,6 +35,7 @@ export default function PremiumScreen() {
     PRICING_PLANS.find(p => p.popular) || PRICING_PLANS[2]
   );
   const [processing, setProcessing] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
   const handlePurchase = async () => {
     if (selectedPlan.id === 'free') return;
@@ -116,13 +117,13 @@ export default function PremiumScreen() {
   if (isLoading) {
     return (
       <ThemedView style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
+        <ActivityIndicator size="large" color="#1a1a1a" />
       </ThemedView>
     );
   }
 
   // Show current subscription status if premium
-  if (isPremium) {
+  if (isPremium && !showPricing) {
     const daysLeft = getDaysUntilExpiry();
     const planName = getPlanDisplayName();
     
@@ -168,17 +169,9 @@ export default function PremiumScreen() {
                 Love Premium? Keep it forever!
               </ThemedText>
               <TouchableOpacity
-                style={[styles.upgradeTrialButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
+                style={[styles.upgradeTrialButton, { backgroundColor: '#1a1a1a' }]}
                 onPress={() => {
-                  // Scroll to pricing or show upgrade modal
-                  Alert.alert(
-                    'Upgrade Now',
-                    'Choose a plan to continue enjoying premium features after your trial ends.',
-                    [
-                      { text: 'Maybe Later', style: 'cancel' },
-                      { text: 'View Plans', onPress: () => {} },
-                    ]
-                  );
+                  setShowPricing(true);
                 }}
               >
                 <IconSymbol name="arrow.up.circle.fill" size={20} color="#fff" />
@@ -193,8 +186,8 @@ export default function PremiumScreen() {
             </ThemedText>
             {PREMIUM_FEATURES.map((feature) => (
               <View key={feature.id} style={styles.featureRow}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors[colorScheme ?? 'light'].tint + '20' }]}>
-                  <IconSymbol name={feature.icon as any} size={20} color={Colors[colorScheme ?? 'light'].tint} />
+                <View style={[styles.featureIcon, { backgroundColor: '#f5f5f5' }]}>
+                  <IconSymbol name={feature.icon as any} size={20} color="#1a1a1a" />
                 </View>
                 <View style={styles.featureInfo}>
                   <ThemedText style={styles.featureName}>{feature.name}</ThemedText>
@@ -212,16 +205,16 @@ export default function PremiumScreen() {
             </ThemedText>
             
             <TouchableOpacity style={styles.managementItem} onPress={handleManageSubscription}>
-              <IconSymbol name="gear" size={20} color={Colors[colorScheme ?? 'light'].icon} />
+              <IconSymbol name="gear" size={20} color="#999" />
               <ThemedText style={styles.managementItemText}>Manage in App Store</ThemedText>
-              <IconSymbol name="chevron.right" size={16} color={Colors[colorScheme ?? 'light'].tabIconDefault} />
+              <IconSymbol name="chevron.right" size={16} color="#999" />
             </TouchableOpacity>
 
             {subscription.plan !== 'lifetime' && subscription.plan !== 'free' && (
               <TouchableOpacity style={styles.managementItem} onPress={handleCancelSubscription}>
                 <IconSymbol name="xmark.circle" size={20} color="#FF6B6B" />
                 <ThemedText style={[styles.managementItemText, { color: '#FF6B6B' }]}>Cancel Subscription</ThemedText>
-                <IconSymbol name="chevron.right" size={16} color={Colors[colorScheme ?? 'light'].tabIconDefault} />
+                <IconSymbol name="chevron.right" size={16} color="#999" />
               </TouchableOpacity>
             )}
           </View>
@@ -232,6 +225,136 @@ export default function PremiumScreen() {
           
           <View style={{ height: 40 }} />
         </ScrollView>
+      </ThemedView>
+    );
+  }
+
+  // Show pricing plans when upgrade is clicked
+  if (showPricing) {
+    return (
+      <ThemedView style={styles.container}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => setShowPricing(false)}
+            >
+              <IconSymbol name="chevron.left" size={24} color="#1a1a1a" />
+            </TouchableOpacity>
+            <ThemedText type="title" style={styles.title}>
+              Choose Your Plan
+            </ThemedText>
+          </View>
+
+          {/* Pricing Cards */}
+          <View style={styles.pricingSection}>
+            {PRICING_PLANS.filter(p => p.id !== 'free').map((plan) => (
+              <TouchableOpacity
+                key={plan.id}
+                style={[
+                  styles.pricingCard,
+                  selectedPlan.id === plan.id && styles.pricingCardSelected,
+                  plan.popular && styles.pricingCardPopular,
+                  { borderColor: selectedPlan.id === plan.id ? '#1a1a1a' : '#e0e0e0' }
+                ]}
+                onPress={() => setSelectedPlan(plan)}
+              >
+                {plan.popular && (
+                  <View style={[styles.popularBadge, { backgroundColor: '#1a1a1a' }]}>
+                    <ThemedText style={styles.popularText}>MOST POPULAR</ThemedText>
+                  </View>
+                )}
+                
+                <View style={styles.planHeader}>
+                  <View style={styles.planInfo}>
+                    <ThemedText type="subtitle" style={styles.planName}>{plan.name}</ThemedText>
+                    {plan.savings && (
+                      <View style={styles.savingsBadge}>
+                        <ThemedText style={styles.savingsText}>{plan.savings}</ThemedText>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.priceContainer}>
+                    <ThemedText style={styles.currency}>$</ThemedText>
+                    <ThemedText type="title" style={styles.price}>
+                      {plan.price.toFixed(2).split('.')[0]}
+                    </ThemedText>
+                    <ThemedText style={styles.cents}>
+                      .{plan.price.toFixed(2).split('.')[1]}
+                    </ThemedText>
+                    {plan.period && (
+                      <ThemedText style={styles.period}>/{plan.period}</ThemedText>
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.planFeatures}>
+                  {plan.features.slice(0, 3).map((feature, index) => (
+                    <View key={index} style={styles.planFeatureRow}>
+                      <IconSymbol name="checkmark" size={16} color="#4ECDC4" />
+                      <ThemedText style={styles.planFeatureText}>{feature}</ThemedText>
+                    </View>
+                  ))}
+                </View>
+
+                {selectedPlan.id === plan.id && (
+                  <View style={[styles.selectedIndicator, { backgroundColor: '#1a1a1a' }]}>
+                    <IconSymbol name="checkmark" size={16} color="#fff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* All Features List */}
+          <View style={styles.allFeaturesSection}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              All Premium Features
+            </ThemedText>
+            {PREMIUM_FEATURES.map((feature) => (
+              <View key={feature.id} style={styles.featureRow}>
+                <View style={[styles.featureIcon, { backgroundColor: '#f5f5f5' }]}>
+                  <IconSymbol name={feature.icon as any} size={20} color="#1a1a1a" />
+                </View>
+                <View style={styles.featureInfo}>
+                  <ThemedText style={styles.featureName}>{feature.name}</ThemedText>
+                  <ThemedText style={styles.featureDesc}>{feature.description}</ThemedText>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
+            <ThemedText style={styles.restoreText}>Restore Purchases</ThemedText>
+          </TouchableOpacity>
+
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+
+        {/* Purchase Button */}
+        <View style={[styles.purchaseContainer, { backgroundColor: '#fff' }]}>
+          <TouchableOpacity
+            style={[styles.purchaseButton, { backgroundColor: '#1a1a1a' }]}
+            onPress={handlePurchase}
+            disabled={processing}
+          >
+            {processing ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <ThemedText style={styles.purchaseButtonText}>
+                  Get {selectedPlan.name} - ${selectedPlan.price.toFixed(2)}
+                  {selectedPlan.period ? `/${selectedPlan.period}` : ''}
+                </ThemedText>
+                <IconSymbol name="arrow.right" size={20} color="#fff" />
+              </>
+            )}
+          </TouchableOpacity>
+          <ThemedText style={styles.termsText}>
+            Cancel anytime • Secure payment
+          </ThemedText>
+        </View>
       </ThemedView>
     );
   }
@@ -254,8 +377,8 @@ export default function PremiumScreen() {
 
         {/* Free Trial Banner */}
         {!trial.hasUsedTrial && (
-          <TouchableOpacity 
-            style={[styles.trialBanner, { backgroundColor: '#4ECDC4' }]}
+          <TouchableOpacity
+            style={[styles.trialBanner, { backgroundColor: '#1a1a1a' }]}
             onPress={handleStartTrial}
             disabled={processing}
           >
@@ -274,7 +397,7 @@ export default function PremiumScreen() {
         <View style={styles.featuresPreview}>
           {PREMIUM_FEATURES.slice(0, 4).map((feature) => (
             <View key={feature.id} style={styles.featurePreviewItem}>
-              <IconSymbol name={feature.icon as any} size={24} color={Colors[colorScheme ?? 'light'].tint} />
+              <IconSymbol name={feature.icon as any} size={24} color="#1a1a1a" />
               <ThemedText style={styles.featurePreviewText}>{feature.name}</ThemedText>
             </View>
           ))}
@@ -293,12 +416,12 @@ export default function PremiumScreen() {
                 styles.pricingCard,
                 selectedPlan.id === plan.id && styles.pricingCardSelected,
                 plan.popular && styles.pricingCardPopular,
-                { borderColor: selectedPlan.id === plan.id ? Colors[colorScheme ?? 'light'].tint : '#E0E0E0' }
+                { borderColor: selectedPlan.id === plan.id ? '#1a1a1a' : '#e0e0e0' }
               ]}
               onPress={() => setSelectedPlan(plan)}
             >
               {plan.popular && (
-                <View style={[styles.popularBadge, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
+                <View style={[styles.popularBadge, { backgroundColor: '#1a1a1a' }]}>
                   <ThemedText style={styles.popularText}>MOST POPULAR</ThemedText>
                 </View>
               )}
@@ -371,9 +494,9 @@ export default function PremiumScreen() {
       </ScrollView>
 
       {/* Purchase Button */}
-      <View style={[styles.purchaseContainer, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+      <View style={[styles.purchaseContainer, { backgroundColor: '#fff' }]}>
         <TouchableOpacity
-          style={[styles.purchaseButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
+          style={[styles.purchaseButton, { backgroundColor: '#1a1a1a' }]}
           onPress={handlePurchase}
           disabled={processing}
         >
@@ -400,6 +523,7 @@ export default function PremiumScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   centered: {
     justifyContent: 'center',
@@ -413,6 +537,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 20,
     paddingBottom: 24,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   crownBadge: {
     width: 80,
@@ -429,12 +562,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '300',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    opacity: 0.7,
+    color: '#999',
     textAlign: 'center',
   },
   featuresPreview: {
@@ -447,15 +581,16 @@ const styles = StyleSheet.create({
   featurePreviewItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+    backgroundColor: '#f5f5f5',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 16,
     gap: 6,
   },
   featurePreviewText: {
     fontSize: 13,
     fontWeight: '500',
+    color: '#1a1a1a',
   },
   pricingSection: {
     marginBottom: 32,
@@ -463,17 +598,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: 16,
     fontSize: 18,
+    fontWeight: '600',
+    color: '#1a1a1a',
   },
   pricingCard: {
-    borderWidth: 2,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     position: 'relative',
     overflow: 'hidden',
+    backgroundColor: '#fff',
   },
   pricingCardSelected: {
     borderWidth: 2,
+    borderColor: '#1a1a1a',
   },
   pricingCardPopular: {
     paddingTop: 32,
@@ -506,9 +646,10 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#1a1a1a',
   },
   savingsBadge: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#1a1a1a',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -526,20 +667,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginTop: 4,
+    color: '#1a1a1a',
   },
   price: {
     fontSize: 32,
     fontWeight: 'bold',
     lineHeight: 36,
+    color: '#1a1a1a',
   },
   cents: {
     fontSize: 16,
     fontWeight: '600',
     marginTop: 4,
+    color: '#1a1a1a',
   },
   period: {
     fontSize: 14,
-    opacity: 0.6,
+    color: '#999',
     marginTop: 12,
   },
   planFeatures: {
@@ -552,7 +696,7 @@ const styles = StyleSheet.create({
   },
   planFeatureText: {
     fontSize: 13,
-    opacity: 0.8,
+    color: '#666',
   },
   selectedIndicator: {
     position: 'absolute',
@@ -563,6 +707,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1a1a1a',
   },
   allFeaturesSection: {
     marginBottom: 24,
@@ -572,7 +717,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: '#f0f0f0',
     gap: 12,
   },
   featureIcon: {
@@ -581,6 +726,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   featureInfo: {
     flex: 1,
@@ -589,10 +735,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 2,
+    color: '#1a1a1a',
   },
   featureDesc: {
     fontSize: 13,
-    opacity: 0.6,
+    color: '#999',
   },
   restoreButton: {
     alignItems: 'center',
@@ -600,7 +747,7 @@ const styles = StyleSheet.create({
   },
   restoreText: {
     fontSize: 14,
-    opacity: 0.6,
+    color: '#999',
     textDecorationLine: 'underline',
   },
   bottomPadding: {
@@ -615,7 +762,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 34,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
   },
   purchaseButton: {
     flexDirection: 'row',
@@ -624,6 +772,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
+    backgroundColor: '#1a1a1a',
   },
   purchaseButtonText: {
     color: '#fff',
@@ -633,7 +782,7 @@ const styles = StyleSheet.create({
   termsText: {
     textAlign: 'center',
     fontSize: 12,
-    opacity: 0.5,
+    color: '#999',
     marginTop: 8,
   },
   // Premium user styles
@@ -644,16 +793,17 @@ const styles = StyleSheet.create({
   },
   premiumTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '300',
     marginBottom: 8,
+    color: '#1a1a1a',
   },
   premiumSubtitle: {
     fontSize: 16,
-    opacity: 0.7,
+    color: '#999',
   },
   expiryText: {
     fontSize: 14,
-    opacity: 0.5,
+    color: '#999',
     marginTop: 8,
   },
   expiryBadge: {
@@ -675,7 +825,7 @@ const styles = StyleSheet.create({
   upgradeFromTrialSection: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+    backgroundColor: '#f5f5f5',
     borderRadius: 16,
   },
   upgradeTrialButton: {
@@ -686,6 +836,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     marginTop: 12,
+    backgroundColor: '#1a1a1a',
   },
   upgradeTrialButtonText: {
     color: '#fff',
@@ -700,12 +851,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: '#f0f0f0',
     gap: 12,
   },
   managementItemText: {
     flex: 1,
     fontSize: 15,
+    color: '#1a1a1a',
   },
   trialBanner: {
     flexDirection: 'row',
@@ -714,6 +866,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     marginBottom: 24,
+    backgroundColor: '#1a1a1a',
   },
   trialBannerContent: {
     flexDirection: 'row',
@@ -726,10 +879,10 @@ const styles = StyleSheet.create({
   trialBannerTitle: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   trialBannerSubtitle: {
-    color: 'rgba(255,255,255,0.8)',
+    color: '#999',
     fontSize: 13,
   },
 });
