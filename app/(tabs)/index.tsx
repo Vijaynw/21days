@@ -86,6 +86,7 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
+  const [newHabitIcon, setNewHabitIcon] = useState('🎯');
   const [isEditingHabit, setIsEditingHabit] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState<Habit | null>(null);
   const [editedHabitName, setEditedHabitName] = useState('');
@@ -154,13 +155,14 @@ export default function HabitsScreen() {
       color: '#1a1a1a',
       createdAt: new Date().toISOString(),
       completions: [],
-      icon: template?.icon || '🎯',
+      icon: template?.icon || newHabitIcon,
     };
 
     await storage.addHabit(newHabit);
     setHabits([...habits, newHabit]);
     setNewHabitName('');
     setIsAdding(false);
+    setNewHabitIcon('🎯');
   };
 
   const toggleCompletion = async (habit: Habit, date: Date) => {
@@ -411,6 +413,26 @@ export default function HabitsScreen() {
                     </TouchableOpacity>
                   ))}
               </View>
+            </ScrollView>
+            <Text style={styles.suggestionsTitle}>icon</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.iconScroll}
+              contentContainerStyle={styles.iconScrollContent}
+            >
+              {ICON_CHOICES.map((icon) => (
+                <TouchableOpacity
+                  key={icon}
+                  style={[
+                    styles.iconChip,
+                    newHabitIcon === icon && styles.iconChipActive,
+                  ]}
+                  onPress={() => setNewHabitIcon(icon)}
+                >
+                  <Text style={styles.iconChipText}>{icon}</Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
             
             <View style={styles.modalButtons}>
