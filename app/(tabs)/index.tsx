@@ -3,6 +3,7 @@ import { Habit, HabitCategory } from '@/types/habit';
 import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
+import { Button } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -276,7 +277,7 @@ export default function HabitsScreen() {
                 <TouchableOpacity
                   key={habit.id}
                   style={styles.habitCard}
-                  onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}
+                  // onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}
                   activeOpacity={0.8}
                 >
                   <View style={styles.habitHeader}>
@@ -290,13 +291,7 @@ export default function HabitsScreen() {
                       )}
                     </View>
                     <View style={styles.habitActions}>
-                      <TouchableOpacity
-                        onPress={() => openEditHabit(habit)}
-                        style={styles.editButton}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Text style={styles.editButtonText}>edit</Text>
-                      </TouchableOpacity>
+                     
                       <TouchableOpacity
                         onPress={() => requestHabitDelete(habit)}
                         style={styles.deleteButton}
@@ -305,6 +300,10 @@ export default function HabitsScreen() {
                         <Text style={styles.deleteButtonText}>×</Text>
                       </TouchableOpacity>
                     </View>
+                  </View>
+                  <View style={{flex:1,flexDirection:"row"}}>
+                    <Button onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}>Progress </Button>
+                    <Button onPress={() => openEditHabit(habit)}>edit</Button>
                   </View>
 
                   <Text style={styles.monthLabel}>{currentMonth}</Text>
