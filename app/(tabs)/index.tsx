@@ -93,6 +93,8 @@ export default function HabitsScreen() {
   const [editedHabitName, setEditedHabitName] = useState('');
   const [editedHabitIcon, setEditedHabitIcon] = useState<string>('🎯');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [habitPendingDelete, setHabitPendingDelete] = useState<Habit | null>(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const timelineDates = getTimelineDates();
@@ -210,22 +212,21 @@ export default function HabitsScreen() {
     return Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const deleteHabit = (habitId: string) => {
-    Alert.alert(
-      'Delete Habit',
-      'Are you sure you want to delete this habit?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await storage.deleteHabit(habitId);
-            setHabits(habits.filter(h => h.id !== habitId));
-          },
-        },
-      ]
-    );
+  const requestHabitDelete = (habit: Habit) => {
+    setHabitPendingDelete(habit);
+    setDeleteModalVisible(true);
+  };
+
+  const cancelHabitDelete = () => {
+    setDeleteModalVisible(false);
+    setHabitPendingDelete(null);
+  };
+
+  const confirmHabitDelete = async () => {
+    if (!habitPendingDelete) return;
+    await storage.deleteHabit(habitPendingDelete.id);
+    setHabits(prev => prev.filter(h => h.id !== habitPendingDelete.id));
+    cancelHabitDelete();
   };
 
   return (
@@ -298,7 +299,7 @@ export default function HabitsScreen() {
                         <Text style={styles.editButtonText}>edit</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={() => deleteHabit(habit.id)}
+                        onPress={() => requestHabitDelete(habit)}
                         style={styles.deleteButton}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
@@ -456,6 +457,36 @@ export default function HabitsScreen() {
                 disabled={!newHabitName.trim()}
               >
                 <Text style={styles.createButtonText}>create</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={deleteModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModalCard}>
+            <View style={styles.deleteBadge}>
+              <Text style={styles.deleteBadgeText}>⚠️</Text>
+            </View>
+            <Text style={styles.deleteTitle}>Delete habit?</Text>
+            <Text style={styles.deleteSubtitle}>
+              {habitPendingDelete?.name
+                ? `This will remove “${habitPendingDelete.name}” and its history.`
+                : 'This will remove the habit and its history.'}
+            </Text>
+            <View style={styles.deleteButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={cancelHabitDelete}
+              >
+                <Text style={styles.cancelButtonText}>Keep habit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteConfirmButton}
+                onPress={confirmHabitDelete}
+              >
+                <Text style={styles.deleteConfirmText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -872,5 +903,53 @@ const styles = StyleSheet.create({
   quoteAuthor: {
     fontSize: 13,
     color: '#999',
+  },
+  deleteModalCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    gap: 16,
+  },
+  deleteBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFF1F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteBadgeText: {
+    fontSize: 24,
+  },
+  deleteTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111',
+  },
+  deleteSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  deleteButtons: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  deleteConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#ff5f6d',
+  },
+  deleteConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
