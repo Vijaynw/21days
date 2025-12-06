@@ -2,6 +2,7 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -11,15 +12,23 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#999',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 10,
-        },
+   tabBarStyle: {
+  position: 'absolute',
+  bottom: 20,
+  left: 20,
+  right: 20,
+  height: 80,
+  paddingBottom: 20,
+  paddingTop: 10,
+  backgroundColor: '#fff',
+  borderRadius: 24,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowRadius: 10,
+  elevation: 5,
+  borderTopWidth: 0,
+},
+
         tabBarLabelStyle: {
           display: 'none',
         },
@@ -28,7 +37,17 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+  <View
+    style={{
+      padding: 10,
+      borderRadius: 20,
+      backgroundColor: focused ? '#f0f0f0' : 'transparent',
+    }}
+  >
+    <IconSymbol size={24} name="house.fill" color={color} />
+  </View>
+),
         }}
       />
       <Tabs.Screen
@@ -49,6 +68,7 @@ export default function TabLayout() {
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="premium" options={{ href: null }} />
       <Tabs.Screen name="index-old" options={{ href: null }} />
+      <Tabs.Screen name="index-old-backup" options={{ href: null }} />
     </Tabs>
   );
 }

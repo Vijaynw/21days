@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -26,6 +25,12 @@ const HABIT_CATEGORIES = [
   { id: 'productivity', name: 'productivity', icon: '⚡' },
   { id: 'social', name: 'social', icon: '👥' },
   { id: 'creative', name: 'creative', icon: '🎨' },
+];
+const MOTIVATIONAL_QUOTES = [
+  { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+  { text: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
+  { text: "A journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
 ];
 
 const HABIT_TEMPLATES = [
@@ -74,6 +79,13 @@ const getTimelineDates = () => {
   return dates;
 };
 
+// Helper to get current date index for centering
+const getCurrentDateIndex = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return 14; // Since we have 15 dates total (0-14), today is at index 14
+};
+
 export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -83,7 +95,7 @@ export default function HabitsScreen() {
   const router = useRouter();
   const timelineDates = getTimelineDates();
   const currentMonth = MONTHS_SHORT[new Date().getMonth()];
-
+const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
   useEffect(() => {
     loadHabits();
   }, []);
@@ -108,8 +120,8 @@ export default function HabitsScreen() {
     setIsAdding(true);
   };
 
-  const addHabit = async (name?: string) => {
-    const habitName = name || newHabitName.trim();
+  const addHabit = async (template: any) => {
+    const habitName = template?.name || newHabitName.trim();
     if (!habitName) return;
 
     const newHabit: Habit = {
@@ -118,6 +130,7 @@ export default function HabitsScreen() {
       color: '#1a1a1a',
       createdAt: new Date().toISOString(),
       completions: [],
+      icon: template?.icon || '🎯',
     };
 
     await storage.addHabit(newHabit);
@@ -213,7 +226,13 @@ export default function HabitsScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>track</Text>
             <Text style={styles.emptySubtitle}>your habit.</Text>
+            
+            <View style={styles.quoteCard}>
+              <Text style={styles.quoteText}>&ldquo;{dailyQuote.text}&rdquo;</Text>
+              <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
+            </View>
           </View>
+          
         ) : (
           <>
             {/* Feature 4: Weekly Summary Widget */}
@@ -225,13 +244,15 @@ export default function HabitsScreen() {
                     {habits.filter(h => h.completions.includes(formatDate(new Date()))).length}/{habits.length}
                   </Text>
                 </View>
-                <View style={styles.widgetDivider} />
-                <View style={styles.widgetSection}>
+                {/* <View style={styles.widgetDivider} /> */}
+                {/* <View style={styles.widgetSection}>
                   <Text style={styles.widgetTitle}>this week</Text>
                   <Text style={styles.widgetNumber}>{getWeekProgress()}%</Text>
-                </View>
+                </View> */}
               </View>
             </View>
+
+             
 
             {habits.map(habit => {
               const streak = getCurrentStreak(habit);
@@ -244,7 +265,7 @@ export default function HabitsScreen() {
                 >
                   <View style={styles.habitHeader}>
                     <View style={styles.habitNameRow}>
-                      <Text style={styles.habitName}>{habit.name}</Text>
+                      <Text style={styles.habitName}>{habit.icon} {habit.name}</Text>
                       {/* Feature 3: Streak Badge */}
                       {streak > 0 && (
                         <View style={styles.streakBadge}>
@@ -288,7 +309,7 @@ export default function HabitsScreen() {
                             if (today) {
                               toggleCompletion(habit, date);
                             } else {
-                              router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } });
+                              // router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } });
                             }
                           }}
                           activeOpacity={0.7}
@@ -369,7 +390,7 @@ export default function HabitsScreen() {
                     <TouchableOpacity
                       key={index}
                       style={styles.suggestionChip}
-                      onPress={() => addHabit(template.name)}
+                      onPress={() => addHabit(template)}
                     >
                       <Text style={styles.suggestionIcon}>{template.icon}</Text>
                       <Text style={styles.suggestionText}>{template.name}</Text>
@@ -691,5 +712,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '500',
+  },
+    quoteCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  quoteText: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#fff',
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  quoteAuthor: {
+    fontSize: 13,
+    color: '#999',
   },
 });

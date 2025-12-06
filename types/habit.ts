@@ -17,6 +17,7 @@ export interface Habit {
   completions: string[]; // Array of ISO date strings (YYYY-MM-DD)
   reminderTime?: string; // HH:MM format
   notes?: { [date: string]: string }; // Notes per date
+  icon?: string;
 }
 
 export interface HabitStats {

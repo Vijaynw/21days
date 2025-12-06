@@ -4,11 +4,11 @@ import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
