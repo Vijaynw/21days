@@ -71,14 +71,16 @@ const ICON_CHOICES = ['😴', '🏃', '💧', '💊', '🤸', '🥗', '👟', '�
 // Feature 2: Scrollable past dates timeline
 const getTimelineDates = () => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0); // reset time to midnight
   const dates: Date[] = [];
-  const range = 14;
-  for (let i = -range; i <= 0; i++) {
+  const range = 7; // total number of days
+  const halfRange = Math.floor(range / 2);
+  for (let i = -halfRange; i <= halfRange; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
     dates.push(date);
   }
+
   return dates;
 };
 
