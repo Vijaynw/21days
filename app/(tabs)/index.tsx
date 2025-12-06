@@ -4,9 +4,10 @@ import { FREE_TIER_LIMITS } from '@/types/premium';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  DeviceEventEmitter,
   Modal,
   ScrollView,
   StyleSheet,
@@ -130,7 +131,7 @@ export default function HabitsScreen() {
     setEditedHabitIcon('🎯');
   };
 
-  const handleAddHabitPress = () => {
+  const handleAddHabitPress = useCallback(() => {
     if (!canAddMoreHabits(habits.length)) {
       Alert.alert(
         'Habit Limit Reached',
@@ -143,7 +144,14 @@ export default function HabitsScreen() {
       return;
     }
     setIsAdding(true);
-  };
+  }, [canAddMoreHabits, habits.length, router]);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('open-add-habit', () => {
+      handleAddHabitPress();
+    });
+    return () => subscription.remove();
+  }, [handleAddHabitPress]);
 
   const addHabit = async (template: { name: string; category: HabitCategory; icon: string } | null = null) => {
     const habitName = template?.name || newHabitName.trim();
