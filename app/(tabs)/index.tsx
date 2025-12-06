@@ -90,6 +90,9 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
+  const [isEditingHabit, setIsEditingHabit] = useState(false);
+  const [habitToEdit, setHabitToEdit] = useState<Habit | null>(null);
+  const [editedHabitName, setEditedHabitName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
@@ -103,6 +106,28 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
   const loadHabits = async () => {
     const loadedHabits = await storage.getHabits();
     setHabits(loadedHabits);
+  };
+
+  const openEditHabit = (habit: Habit) => {
+    setHabitToEdit(habit);
+    setEditedHabitName(habit.name);
+    setIsEditingHabit(true);
+  };
+
+  const handleSaveHabitName = async () => {
+    if (!habitToEdit) return;
+    const trimmed = editedHabitName.trim();
+    if (!trimmed) {
+      Alert.alert('Name required', 'Please enter a valid habit name.');
+      return;
+    }
+
+    const updatedHabit = { ...habitToEdit, name: trimmed };
+    await storage.updateHabit(updatedHabit);
+    setHabits((prev) => prev.map((h) => (h.id === updatedHabit.id ? updatedHabit : h)));
+    setIsEditingHabit(false);
+    setHabitToEdit(null);
+    setEditedHabitName('');
   };
 
   const handleAddHabitPress = () => {
@@ -266,7 +291,6 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
                   <View style={styles.habitHeader}>
                     <View style={styles.habitNameRow}>
                       <Text style={styles.habitName}>{habit.icon} {habit.name}</Text>
-                      {/* Feature 3: Streak Badge */}
                       {streak > 0 && (
                         <View style={styles.streakBadge}>
                           <Text style={styles.streakIcon}>🔥</Text>
@@ -274,13 +298,22 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
                         </View>
                       )}
                     </View>
-                    <TouchableOpacity
-                      onPress={() => deleteHabit(habit.id)}
-                      style={styles.deleteButton}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Text style={styles.deleteButtonText}>×</Text>
-                    </TouchableOpacity>
+                    <View style={styles.habitActions}>
+                      <TouchableOpacity
+                        onPress={() => openEditHabit(habit)}
+                        style={styles.editButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Text style={styles.editButtonText}>edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => deleteHabit(habit.id)}
+                        style={styles.deleteButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Text style={styles.deleteButtonText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
                   <Text style={styles.monthLabel}>{currentMonth}</Text>
@@ -417,6 +450,43 @@ const [dailyQuote, setDailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
           </View>
         </View>
       </Modal>
+
+      <Modal visible={isEditingHabit} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>edit habit</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="habit name"
+              placeholderTextColor="#999"
+              value={editedHabitName}
+              onChangeText={setEditedHabitName}
+              autoFocus
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setIsEditingHabit(false);
+                  setHabitToEdit(null);
+                  setEditedHabitName('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.createButton, !editedHabitName.trim() && styles.createButtonDisabled]}
+                onPress={handleSaveHabitName}
+                disabled={!editedHabitName.trim()}
+              >
+                <Text style={styles.createButtonText}>save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -535,6 +605,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#ff9800',
+  },
+  habitActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  editButtonText: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    fontWeight: '600',
   },
   deleteButton: {
     width: 28,
