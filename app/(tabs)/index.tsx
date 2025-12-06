@@ -65,6 +65,8 @@ const HABIT_TEMPLATES = [
   { name: 'photography', category: 'creative' as HabitCategory, icon: '📷' },
 ];
 
+const ICON_CHOICES = ['😴', '🏃', '💧', '💊', '🤸', '🥗', '👟', '🧘', '📝', '🙏', '🌬️', '📵', '📖', '🗣️', '💻', '🎓', '✏️', '⏰', '📋', '📧', '🚫', '🎯', '📞', '🤝', '💬', '🎨', '🎸', '✍️', '📷'];
+
 // Feature 2: Scrollable past dates timeline
 const getTimelineDates = () => {
   const today = new Date();
@@ -87,6 +89,7 @@ export default function HabitsScreen() {
   const [isEditingHabit, setIsEditingHabit] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState<Habit | null>(null);
   const [editedHabitName, setEditedHabitName] = useState('');
+  const [editedHabitIcon, setEditedHabitIcon] = useState<string>('🎯');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
@@ -105,6 +108,7 @@ export default function HabitsScreen() {
   const openEditHabit = (habit: Habit) => {
     setHabitToEdit(habit);
     setEditedHabitName(habit.name);
+    setEditedHabitIcon(habit.icon ?? '🎯');
     setIsEditingHabit(true);
   };
 
@@ -116,12 +120,13 @@ export default function HabitsScreen() {
       return;
     }
 
-    const updatedHabit = { ...habitToEdit, name: trimmed };
+    const updatedHabit = { ...habitToEdit, name: trimmed, icon: editedHabitIcon };
     await storage.updateHabit(updatedHabit);
     setHabits((prev) => prev.map((h) => (h.id === updatedHabit.id ? updatedHabit : h)));
     setIsEditingHabit(false);
     setHabitToEdit(null);
     setEditedHabitName('');
+    setEditedHabitIcon('🎯');
   };
 
   const handleAddHabitPress = () => {
@@ -441,6 +446,27 @@ export default function HabitsScreen() {
               autoFocus
             />
 
+            <Text style={styles.suggestionsTitle}>icon</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.iconScroll}
+              contentContainerStyle={styles.iconScrollContent}
+            >
+              {ICON_CHOICES.map((icon) => (
+                <TouchableOpacity
+                  key={icon}
+                  style={[
+                    styles.iconChip,
+                    editedHabitIcon === icon && styles.iconChipActive,
+                  ]}
+                  onPress={() => setEditedHabitIcon(icon)}
+                >
+                  <Text style={styles.iconChipText}>{icon}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -448,6 +474,7 @@ export default function HabitsScreen() {
                   setIsEditingHabit(false);
                   setHabitToEdit(null);
                   setEditedHabitName('');
+                  setEditedHabitIcon('🎯');
                 }}
               >
                 <Text style={styles.cancelButtonText}>cancel</Text>
@@ -595,6 +622,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1a1a1a',
     fontWeight: '600',
+  },
+  iconScroll: {
+    marginHorizontal: -24,
+    marginBottom: 16,
+  },
+  iconScrollContent: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  iconChip: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  iconChipActive: {
+    borderColor: '#1a1a1a',
+    backgroundColor: '#1a1a1a10',
+  },
+  iconChipText: {
+    fontSize: 20,
   },
   deleteButton: {
     width: 28,
