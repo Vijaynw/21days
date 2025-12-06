@@ -302,8 +302,8 @@ export default function HabitsScreen() {
                     </View>
                   </View>
                   <View style={{flex:1,flexDirection:"row"}}>
-                    <Button onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}>Progress </Button>
-                    <Button onPress={() => openEditHabit(habit)}>edit</Button>
+                    <Button color='#9da1a4ff' onPress={() => router.push({ pathname: '[id]' as any, params: { id: habit.id } })}>Progress </Button>
+                    <Button color='#9da1a4ff' onPress={() => openEditHabit(habit)}>edit</Button>
                   </View>
 
                   <Text style={styles.monthLabel}>{currentMonth}</Text>
