@@ -31,7 +31,7 @@ export default function HabitDetailScreen() {
       setHabit(found);
       setEditedName(found.name);
     }
-  }, [id]);
+  });
 
   useEffect(() => {
     loadHabit();

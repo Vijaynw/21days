@@ -332,6 +332,7 @@ export default function HabitsScreen() {
                             if (today) {
                               toggleCompletion(habit, date);
                             } else {
+                              toggleCompletion(habit, date);
                               // router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } });
                             }
                           }}

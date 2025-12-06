@@ -23,7 +23,7 @@ export default function TabLayout() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['right', 'left','top']} style={styles.safeArea}>
       <Tabs
         tabBar={props => <FloatingTabBar {...props} />}
         screenOptions={{
@@ -143,7 +143,7 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F2F4FB',
+    backgroundColor: Platform.OS !== 'ios' ? '#000000ff' : '#F2F4FB',
   },
   tabWrapper: {
     position: 'absolute',
