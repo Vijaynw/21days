@@ -239,7 +239,7 @@ export default function HabitsScreen() {
       </View>
 
                   {/* Feature 4: Weekly Summary Widget */}
-            <View style={styles.widget}>
+            {habits.length > 0 && <View style={styles.widget}>
               <View style={styles.widgetRow}>
                 <View style={styles.widgetSection}>
                   <Text style={styles.widgetTitle}>today</Text>
@@ -253,9 +253,9 @@ export default function HabitsScreen() {
                   <Text style={styles.widgetNumber}>{getWeekProgress()}%</Text>
                 </View> */}
               </View>
-            </View>
+            </View>}
 
-      <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {habits.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>track</Text>

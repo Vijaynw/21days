@@ -93,6 +93,7 @@ export default function PremiumScreen() {
   };
 
   const handleCancelSubscription = async () => {
+    upgradeToPlan("free")
     Alert.alert(
       'Cancel Subscription',
       'Are you sure you want to cancel? You will lose access to premium features at the end of your billing period.',
@@ -376,7 +377,7 @@ export default function PremiumScreen() {
         </View>
 
         {/* Free Trial Banner */}
-        {!trial.hasUsedTrial && (
+        {subscription.plan === 'free' && (
           <TouchableOpacity
             style={[styles.trialBanner, { backgroundColor: '#1a1a1a' }]}
             onPress={handleStartTrial}
@@ -481,6 +482,30 @@ export default function PremiumScreen() {
                 <ThemedText style={styles.featureName}>{feature.name}</ThemedText>
                 <ThemedText style={styles.featureDesc}>{feature.description}</ThemedText>
               </View>
+            </View>
+          ))}
+        </View>
+
+        {/* All Premium Features */}
+        <View style={styles.allFeaturesSection}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            All Premium Features
+          </ThemedText>
+          {PREMIUM_FEATURES.map((feature) => (
+            <View key={feature.id} style={styles.featureRow}>
+              <View style={[styles.featureIcon, { backgroundColor: '#f5f5f5' }]}>
+                <IconSymbol name={feature.icon as any} size={20} color="#1a1a1a" />
+              </View>
+              <View style={styles.featureInfo}>
+                <ThemedText style={styles.featureName}>{feature.name}</ThemedText>
+                <ThemedText style={styles.featureDesc}>{feature.description}</ThemedText>
+                {feature.freeLimit && (
+                  <ThemedText style={styles.limitText}>
+                    Free: {feature.freeLimit} • Premium: {feature.premiumLimit === 'unlimited' ? 'Unlimited' : feature.premiumLimit}
+                  </ThemedText>
+                )}
+              </View>
+              <IconSymbol name="checkmark.circle.fill" size={24} color="#4ECDC4" />
             </View>
           ))}
         </View>
@@ -741,6 +766,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
   },
+  limitText: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
   restoreButton: {
     alignItems: 'center',
     paddingVertical: 16,
@@ -751,7 +782,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   bottomPadding: {
-    height: 120,
+    height: 140,
   },
   purchaseContainer: {
     position: 'absolute',
@@ -760,7 +791,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 34,
+    paddingBottom: 50,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
     backgroundColor: '#fff',
