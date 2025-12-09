@@ -5,6 +5,7 @@ import { Colors } from '@/constants/theme';
 import { usePremium } from '@/contexts/PremiumContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PREMIUM_FEATURES, PRICING_PLANS } from '@/types/premium';
+import { isRazorpayAvailable, processPayment } from '@/utils/razorpay-service';
 import { useState } from 'react';
 import {
     ActivityIndicator,
@@ -14,7 +15,7 @@ import {
     ScrollView,
     StyleSheet,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 export default function PremiumScreen() {
@@ -36,22 +37,69 @@ export default function PremiumScreen() {
   );
   const [processing, setProcessing] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   const handlePurchase = async () => {
     if (selectedPlan.id === 'free') return;
     
     setProcessing(true);
-    const result = await upgradeToPlan(selectedPlan.id);
-    setProcessing(false);
-    
-    if (result.success) {
-      Alert.alert(
-        '🎉 Welcome to Premium!',
-        `You've successfully upgraded to ${selectedPlan.name}. Enjoy all premium features!`,
-        [{ text: 'Awesome!' }]
-      );
+
+    // Check if Razorpay is available
+    if (isRazorpayAvailable()) {
+      // Use Razorpay for payment
+      try {
+        const paymentResult = await processPayment({
+          planId: selectedPlan.id,
+          amount: selectedPlan.price,
+          planName: selectedPlan.name,
+        });
+
+        if (paymentResult.success) {
+          // Payment successful, upgrade the plan
+          const result = await upgradeToPlan(selectedPlan.id);
+          setProcessing(false);
+          
+          if (result.success) {
+            setShowSuccessAnimation(true);
+            setTimeout(() => {
+              setShowSuccessAnimation(false);
+              Alert.alert(
+                '🎉 Welcome to Premium!',
+                'You have successfully upgraded to ' + selectedPlan.name + '. Enjoy all premium features!',
+                [{ text: 'Awesome!' }]
+              );
+            }, 2000);
+          }
+        } else {
+          setProcessing(false);
+          if (paymentResult.code !== 'PAYMENT_CANCELLED') {
+            Alert.alert('Payment Failed', paymentResult.error || 'Please try again.');
+          }
+        }
+      } catch (error) {
+        setProcessing(false);
+        if (error.code !== 'PAYMENT_CANCELLED') {
+          Alert.alert('Error', error.message || 'Payment failed. Please try again.');
+        }
+      }
     } else {
-      Alert.alert('Purchase Failed', result.error || 'Failed to process purchase. Please try again.');
+      // Fallback: Direct upgrade (for testing/development)
+      const result = await upgradeToPlan(selectedPlan.id);
+      setProcessing(false);
+      
+      if (result.success) {
+        setShowSuccessAnimation(true);
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+          Alert.alert(
+            '🎉 Welcome to Premium!',
+            'You have successfully upgraded to ' + selectedPlan.name + '. Enjoy all premium features!',
+            [{ text: 'Awesome!' }]
+          );
+        }, 2000);
+      } else {
+        Alert.alert('Purchase Failed', result.error || 'Failed to process purchase. Please try again.');
+      }
     }
   };
 
@@ -541,6 +589,26 @@ export default function PremiumScreen() {
           Cancel anytime • Secure payment
         </ThemedText>
       </View>
+
+      {/* Success Animation Modal */}
+      <Modal
+        visible={showSuccessAnimation}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessAnimation(false)}
+      >
+        <View style={styles.successAnimationOverlay}>
+          <View style={styles.successAnimationContainer}>
+            <LottieAnimation
+              source={require('@/assets/animations/success.json')}
+              autoPlay={true}
+              loop={false}
+              style={styles.successAnimation}
+            />
+            <Text style={styles.successText}>Welcome to Premium!</Text>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -915,5 +983,33 @@ const styles = StyleSheet.create({
   trialBannerSubtitle: {
     color: '#999',
     fontSize: 13,
+  },
+  // Success Animation styles
+  successAnimationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successAnimationContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 40,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  successAnimation: {
+    width: 180,
+    height: 180,
+  },
+  successText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginTop: 20,
   },
 });

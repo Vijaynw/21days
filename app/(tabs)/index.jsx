@@ -1,3 +1,4 @@
+import { LottieAnimation } from '@/components/lottie-animation';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
@@ -7,15 +8,15 @@ import { Button } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    DeviceEventEmitter,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  DeviceEventEmitter,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -98,6 +99,7 @@ export default function HabitsScreen() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [habitPendingDelete, setHabitPendingDelete] = useState(null);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const timelineDates = getTimelineDates();
@@ -191,6 +193,12 @@ export default function HabitsScreen() {
 
     await storage.updateHabit(updatedHabit);
     setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
+
+    // Show success animation when completing a habit (not uncompleting)
+    if (!isCompleted && isToday(date)) {
+      setShowSuccessAnimation(true);
+      setTimeout(() => setShowSuccessAnimation(false), 1500);
+    }
   };
 
   const isDateCompleted = (habit, date) => {
@@ -549,6 +557,27 @@ export default function HabitsScreen() {
                 <Text style={styles.createButtonText}>save</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Success Animation Modal */}
+      <Modal
+        visible={true}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessAnimation(false)}
+      >
+        <View style={styles.successAnimationOverlay}>
+          <View style={styles.successAnimationContainer}>
+            <LottieAnimation
+              source={require('@/assets/animations/celebration.json')}
+              autoPlay={true}
+              loop={false}
+              style={styles.successAnimation}
+              onAnimationFinish={() => setShowSuccessAnimation(false)}
+            />
+            <Text style={styles.successText}>Great job!</Text>
           </View>
         </View>
       </Modal>
@@ -958,5 +987,33 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     color: '#1a1a1a',
     textAlign:"left"
+  },
+  // Success Animation styles
+  successAnimationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successAnimationContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  successAnimation: {
+    width: 150,
+    height: 150,
+  },
+  successText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginTop: 16,
   },
 });
