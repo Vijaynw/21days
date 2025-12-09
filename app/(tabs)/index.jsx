@@ -563,7 +563,7 @@ export default function HabitsScreen() {
 
       {/* Success Animation Modal */}
       <Modal
-        visible={true}
+        visible={showSuccessAnimation}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuccessAnimation(false)}
