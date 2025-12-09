@@ -136,7 +136,7 @@ export default function ProfileScreen() {
 
           <TouchableOpacity 
             style={styles.settingItem}
-            onPress={function() { router.push('/settings'); }}
+            onPress={function() { router.push('./settings'); }}
           >
             <Text style={styles.settingIcon}>⚙️</Text>
             <Text style={styles.settingText}>settings</Text>

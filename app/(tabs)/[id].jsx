@@ -7,13 +7,12 @@ import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -129,24 +128,12 @@ export default function HabitDetailScreen() {
         <TouchableOpacity onPress={function() { router.back(); }} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <View style={styles.headerTitleWrapper}>
-          {isEditingName ? (
-            <TextInput
-              style={styles.titleInput}
-              value={editedName}
-              onChangeText={setEditedName}
-              placeholder="Habit name"
-              autoFocus
-              returnKeyType="done"
-              onSubmitEditing={handleSaveName}
-            />
-          ) : (
-            <Text style={styles.headerTitle}>{habit.name}</Text>
-          )}
-        </View>
-        <TouchableOpacity onPress={toggleEditing} style={styles.editButton}>
+          <Text style={styles.headerTitle}>{habit.name}</Text>
+        {/* <View style={styles.headerTitleWrapper}>
+        </View> */}
+        {/* <TouchableOpacity onPress={toggleEditing} style={styles.editButton}>
           <Text style={styles.editButtonText}>{isEditingName ? 'save' : 'edit'}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -273,6 +260,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 22,
     fontWeight: '600',
+    width: '100%',
     color: '#1a1a1a',
     textAlign: 'center',
   },

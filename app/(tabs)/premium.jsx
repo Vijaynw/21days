@@ -1,3 +1,4 @@
+import LottieAnimation from '@/components/lottie-animation';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -8,14 +9,15 @@ import { PREMIUM_FEATURES, PRICING_PLANS } from '@/types/premium';
 import { isRazorpayAvailable, processPayment } from '@/utils/razorpay-service';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Linking,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function PremiumScreen() {
@@ -535,7 +537,7 @@ export default function PremiumScreen() {
         </View>
 
         {/* All Premium Features */}
-        <View style={styles.allFeaturesSection}>
+        {/* <View style={styles.allFeaturesSection}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             All Premium Features
           </ThemedText>
@@ -556,7 +558,7 @@ export default function PremiumScreen() {
               <IconSymbol name="checkmark.circle.fill" size={24} color="#4ECDC4" />
             </View>
           ))}
-        </View>
+        </View> */}
 
         {/* Restore Purchases */}
         <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
