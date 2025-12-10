@@ -2,16 +2,19 @@
  * Habit Detail Screen (JavaScript)
  */
 
+import { LottieAnimation } from '@/components/lottie-animation';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View
 } from 'react-native';
 
@@ -26,6 +29,7 @@ export default function HabitDetailScreen() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [showMissedAnimation, setShowMissedAnimation] = useState(false);
 
   const loadHabit = useCallback(async function() {
     const habits = await storage.getHabits();
@@ -34,11 +38,11 @@ export default function HabitDetailScreen() {
       setHabit(found);
       setEditedName(found.name);
     }
-  }, [id]);
+  });
 
   useEffect(function() {
     loadHabit();
-  }, [loadHabit]);
+  }, [loadHabit,id]);
 
   const handleSaveName = async function() {
     if (!habit) return;
@@ -97,6 +101,61 @@ export default function HabitDetailScreen() {
   const isDateCompleted = function(day) {
     const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
     return habit.completions.includes(dateStr);
+  };
+
+  const isDateMissed = function(day) {
+    const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
+    return (habit.missed || []).includes(dateStr);
+  };
+
+  const toggleCompletion = async function(day) {
+    const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
+    const isCompleted = habit.completions.includes(dateStr);
+    
+    // Remove from missed if marking as complete
+    let updatedMissed = habit.missed || [];
+    if (!isCompleted) {
+      updatedMissed = updatedMissed.filter(d => d !== dateStr);
+    }
+
+    const updatedHabit = {
+      ...habit,
+      completions: isCompleted
+        ? habit.completions.filter(d => d !== dateStr)
+        : [...habit.completions, dateStr],
+      missed: updatedMissed,
+    };
+
+    await storage.updateHabit(updatedHabit);
+    setHabit(updatedHabit);
+    DeviceEventEmitter.emit('habits-updated');
+  };
+
+  const toggleMissed = async function(day) {
+    const dateStr = formatDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day));
+    const isMissed = (habit.missed || []).includes(dateStr);
+    
+    // Remove from completions if marking as missed
+    let updatedCompletions = habit.completions;
+    if (!isMissed) {
+      updatedCompletions = habit.completions.filter(d => d !== dateStr);
+      // Show animation and vibrate when marking as missed
+      Vibration.vibrate(50);
+      setShowMissedAnimation(true);
+      setTimeout(() => setShowMissedAnimation(false), 1200);
+    }
+
+    const updatedHabit = {
+      ...habit,
+      completions: updatedCompletions,
+      missed: isMissed
+        ? (habit.missed || []).filter(d => d !== dateStr)
+        : [...(habit.missed || []), dateStr],
+    };
+
+    await storage.updateHabit(updatedHabit);
+    setHabit(updatedHabit);
+    DeviceEventEmitter.emit('habits-updated');
   };
 
   const changeMonth = function(direction) {
@@ -184,26 +243,40 @@ export default function HabitDetailScreen() {
 
           <View style={styles.daysGrid}>
             {calendarDays.map(function(day, index) {
+              const completed = day !== null && isDateCompleted(day);
+              const missed = day !== null && isDateMissed(day);
               return (
-                <View key={index} style={styles.dayCell}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.dayCell}
+                  // onPress={function() { if (day !== null) toggleCompletion(day); }}
+                  // onLongPress={function() { if (day !== null) toggleMissed(day); }}
+                  delayLongPress={300}
+                  activeOpacity={0.7}
+                >
                   {day !== null && (
                     <View
                       style={[
                         styles.dayCircle,
-                        isDateCompleted(day) && styles.dayCircleCompleted,
+                        completed && styles.dayCircleCompleted,
+                        missed && styles.dayCircleMissed,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.dayText,
-                          isDateCompleted(day) && styles.dayTextCompleted,
-                        ]}
-                      >
-                        {day}
-                      </Text>
+                      {missed ? (
+                        <Text style={styles.missedX}>✕</Text>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.dayText,
+                            completed && styles.dayTextCompleted,
+                          ]}
+                        >
+                          {day}
+                        </Text>
+                      )}
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -229,6 +302,27 @@ export default function HabitDetailScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Missed Animation Modal */}
+      <Modal
+        visible={showMissedAnimation}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMissedAnimation(false)}
+      >
+        <View style={styles.animationOverlay}>
+          <View style={styles.animationContainer}>
+            <LottieAnimation
+              source={require('../../assets/animations/Error.json')}
+              autoPlay={true}
+              loop={false}
+              style={styles.missedAnimation}
+              onAnimationFinish={() => setShowMissedAnimation(false)}
+            />
+            <Text style={styles.missedText}>Missed!</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -384,6 +478,11 @@ const styles = StyleSheet.create({
   dayCircleCompleted: {
     backgroundColor: '#1a1a1a',
   },
+  dayCircleMissed: {
+    backgroundColor: '#ffebee',
+    borderWidth: 2,
+    borderColor: '#ff4444',
+  },
   dayText: {
     fontSize: 14,
     color: '#666',
@@ -391,6 +490,11 @@ const styles = StyleSheet.create({
   dayTextCompleted: {
     color: '#fff',
     fontWeight: '600',
+  },
+  missedX: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ff4444',
   },
   monthSummary: {
     flexDirection: 'row',
@@ -432,5 +536,27 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     color: '#1a1a1a',
+  },
+  animationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  animationContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+  },
+  missedAnimation: {
+    width: 120,
+    height: 120,
+  },
+  missedText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ff4444',
+    marginTop: 8,
   },
 });

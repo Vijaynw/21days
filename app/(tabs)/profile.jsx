@@ -2,6 +2,8 @@
  * Profile Screen (JavaScript)
  */
 
+import LottieAnimation from '@/components/lottie-animation';
+import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -11,6 +13,8 @@ const BUYMEACOFFEE_URL = 'https://buymeacoffee.com/mrstardust';
 
 export default function ProfileScreen() {
   const [habits, setHabits] = useState([]);
+  const {user} = useAuth();
+  console.log("user",user)
   const [totalCompletions, setTotalCompletions] = useState(0);
   const router = useRouter();
 
@@ -89,10 +93,15 @@ export default function ProfileScreen() {
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>👤</Text>
+            <Text style={styles.avatarText}>
+              <LottieAnimation
+                source={require('@/assets/animations/Data Profile.json')}
+                style={styles.avatarAnimation}
+              />
+            </Text>
           </View>
           <Text style={styles.greeting}>keep building</Text>
-          <Text style={styles.greetingBold}>great habits.</Text>
+          <Text style={styles.greetingBold}>great habits. {user?.name}</Text>
         </View>
 
         {/* Stats Grid */}
@@ -119,45 +128,24 @@ export default function ProfileScreen() {
 
         {/* Settings Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>settings</Text>
+          {/* <Text style={styles.sectionTitle}>settings</Text> */}
 
-          <TouchableOpacity style={styles.settingItem}>
+          {/* <TouchableOpacity style={styles.settingItem}>
             <Text style={styles.settingIcon}>🔔</Text>
             <Text style={styles.settingText}>reminders</Text>
             <Text style={styles.settingArrow}>›</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             style={styles.settingItem}
             onPress={function() { router.push('/premium'); }}
           >
             <Text style={styles.settingIcon}>👑</Text>
             <Text style={styles.settingText}>premium</Text>
             <Text style={styles.settingArrow}>›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={function() { router.push('./settings'); }}
-          >
-            <Text style={styles.settingIcon}>⚙️</Text>
-            <Text style={styles.settingText}>settings</Text>
-            <Text style={styles.settingArrow}>›</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>about</Text>
-          <Text style={styles.aboutText}>
-            21days helps you build lasting habits through consistent daily tracking.
-          </Text>
-          <Text style={styles.version}>version 1.0.0</Text>
-        </View>
-
-        {/* Support Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>support {BUYMEACOFFEE_URL}</Text>
+          </TouchableOpacity> */}
+           <View style={styles.section}>
+          {/* <Text style={styles.sectionTitle}>support mrstardust</Text> */}
           <TouchableOpacity 
             style={styles.coffeeCard}
             onPress={function() { Linking.openURL(BUYMEACOFFEE_URL); }}
@@ -171,6 +159,42 @@ export default function ProfileScreen() {
             <Text style={styles.coffeeArrow}>›</Text>
           </TouchableOpacity>
         </View>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={function() { router.push('./settings'); }}
+          >
+            <Text style={styles.settingIcon}>⚙️</Text>
+            <Text style={styles.settingText}>settings</Text>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* About Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.aboutText}>
+            21days helps you build lasting habits through consistent daily tracking.
+          </Text>
+          <Text style={styles.version}>version 1.0.0</Text>
+        </View>
+
+        {/* Support Section */}
+        {/* <View style={styles.section}>
+          <Text style={styles.sectionTitle}>support {BUYMEACOFFEE_URL}</Text>
+          <TouchableOpacity 
+            style={styles.coffeeCard}
+            onPress={function() { Linking.openURL(BUYMEACOFFEE_URL); }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.coffeeEmoji}>☕</Text>
+            <View style={styles.coffeeTextContainer}>
+              <Text style={styles.coffeeTitle}>Buy Me a Coffee</Text>
+              <Text style={styles.coffeeSubtext}>Support the development of 21days</Text>
+            </View>
+            <Text style={styles.coffeeArrow}>›</Text>
+          </TouchableOpacity>
+        </View> */}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -300,6 +324,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ccc',
     marginTop: 12,
+    textAlign: "center",
   },
   coffeeCard: {
     flexDirection: 'row',

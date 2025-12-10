@@ -148,9 +148,9 @@ export default function PremiumScreen() {
       'Cancel Subscription',
       'Are you sure you want to cancel? You will lose access to premium features at the end of your billing period.',
       [
-        { text: 'Keep Subscription', style: 'cancel' },
+        { text: 'Keep Subscription', style: 'Cancel Subscription' },
         { 
-          text: 'Cancel', 
+          text: 'Cancel Subscription', 
           style: 'destructive',
           onPress: async () => {
             const result = await cancelSubscription();

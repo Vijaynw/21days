@@ -158,7 +158,13 @@ export default function HabitsScreen() {
     const subscription = DeviceEventEmitter.addListener('open-add-habit', () => {
       handleAddHabitPress();
     });
-    return () => subscription.remove();
+    const habitUpdateSubscription = DeviceEventEmitter.addListener('habits-updated', () => {
+      loadHabits();
+    });
+    return () => {
+      subscription.remove();
+      habitUpdateSubscription.remove();
+    };
   }, [handleAddHabitPress]);
 
   const addHabit = async (template = null) => {
@@ -342,7 +348,7 @@ export default function HabitsScreen() {
                     </View>
                   </View>
                   <View style={{flex:1,flexDirection:"row"}}>
-                    <Button color='#9da1a4ff' onPress={() => router.push({ pathname: '[id]', params: { id: habit.id } })}>Progress </Button>
+                    <Button color='#9da1a4ff' onPress={() => router.push({ pathname: '[id]', params: { id: habit.id} })}>Progress </Button>
                     <Button color='#9da1a4ff' onPress={() => openEditHabit(habit)}>edit</Button>
                   </View>
 

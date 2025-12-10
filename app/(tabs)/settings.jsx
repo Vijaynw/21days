@@ -2,7 +2,6 @@
  * Settings Screen (JavaScript)
  */
 
-import { SyncCard } from '@/components/SyncCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
@@ -11,10 +10,9 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 export default function SettingsScreen() {
@@ -80,9 +78,9 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>preferences</Text>
+        {/* <Text style={styles.sectionTitle}>preferences</Text> */}
         
-        <View style={styles.settingItem}>
+        {/* <View style={styles.settingItem}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingIcon}>🔔</Text>
             <View>
@@ -96,9 +94,9 @@ export default function SettingsScreen() {
             trackColor={{ false: '#e0e0e0', true: '#1a1a1a' }}
             thumbColor="#fff"
           />
-        </View>
+        </View> */}
 
-        <View style={styles.settingItem}>
+        {/* <View style={styles.settingItem}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingIcon}>🌙</Text>
             <View>
@@ -113,13 +111,13 @@ export default function SettingsScreen() {
             thumbColor="#fff"
             disabled
           />
-        </View>
+        </View> */}
 
-        <Text style={styles.sectionTitle}>cloud sync</Text>
+        {/* <Text style={styles.sectionTitle}>cloud sync</Text> */}
         
-        <SyncCard onSignInPress={function() { router.push('/auth'); }} />
+        {/* <SyncCard onSignInPress={function() { router.push('/auth'); }} /> */}
         
-        {user && (
+        {/* {user && (
           <TouchableOpacity style={styles.settingItem} onPress={handleSignOut}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🚪</Text>
@@ -130,11 +128,11 @@ export default function SettingsScreen() {
             </View>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
-        )}
+        )} */}
 
-        <Text style={styles.sectionTitle}>data</Text>
+        <Text style={styles.sectionTitle}>Data</Text>
 
-        <TouchableOpacity style={styles.settingItem} onPress={handleExportData}>
+        {/* <TouchableOpacity style={styles.settingItem} onPress={handleExportData}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingIcon}>📤</Text>
             <View>
@@ -143,7 +141,7 @@ export default function SettingsScreen() {
             </View>
           </View>
           <Text style={styles.settingArrow}>›</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity style={styles.settingItem} onPress={handleClearData}>
           <View style={styles.settingInfo}>
@@ -158,7 +156,7 @@ export default function SettingsScreen() {
 
         <Text style={styles.sectionTitle}>about</Text>
 
-        <View style={styles.aboutCard}>
+        {/* <View style={styles.aboutCard}>
           <Text style={styles.appName}>21days</Text>
           <Text style={styles.appTagline}>build habits that last</Text>
           <Text style={styles.appVersion}>version 1.0.0</Text>
@@ -168,7 +166,7 @@ export default function SettingsScreen() {
           <Text style={styles.infoText}>
             It takes 21 days to form a habit. Track your daily progress, build streaks, and transform your life one habit at a time.
           </Text>
-        </View>
+        </View> */}
 
         <TouchableOpacity style={styles.linkItem}>
           <Text style={styles.linkText}>Privacy Policy</Text>
@@ -233,7 +231,7 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 24,
     marginBottom: 12,
-    textTransform: 'lowercase',
+    textTransform: "capitalize",
   },
   settingItem: {
     flexDirection: 'row',
