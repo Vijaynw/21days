@@ -5,7 +5,9 @@
 import { storage } from '@/utils/storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const BUYMEACOFFEE_URL = 'https://buymeacoffee.com/mrstardust';
 
 export default function ProfileScreen() {
   const [habits, setHabits] = useState([]);
@@ -153,6 +155,23 @@ export default function ProfileScreen() {
           <Text style={styles.version}>version 1.0.0</Text>
         </View>
 
+        {/* Support Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>support {BUYMEACOFFEE_URL}</Text>
+          <TouchableOpacity 
+            style={styles.coffeeCard}
+            onPress={function() { Linking.openURL(BUYMEACOFFEE_URL); }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.coffeeEmoji}>☕</Text>
+            <View style={styles.coffeeTextContainer}>
+              <Text style={styles.coffeeTitle}>Buy Me a Coffee</Text>
+              <Text style={styles.coffeeSubtext}>Support the development of 21days</Text>
+            </View>
+            <Text style={styles.coffeeArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -281,5 +300,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ccc',
     marginTop: 12,
+  },
+  coffeeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFDD00',
+    borderRadius: 16,
+    padding: 16,
+  },
+  coffeeEmoji: {
+    fontSize: 28,
+    marginRight: 14,
+  },
+  coffeeTextContainer: {
+    flex: 1,
+  },
+  coffeeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  coffeeSubtext: {
+    fontSize: 12,
+    color: '#333',
+    marginTop: 2,
+  },
+  coffeeArrow: {
+    fontSize: 20,
+    color: '#333',
   },
 });
