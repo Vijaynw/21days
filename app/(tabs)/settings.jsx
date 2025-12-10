@@ -2,23 +2,42 @@
  * Settings Screen (JavaScript)
  */
 
+import { SyncCard } from '@/components/SyncCard';
+import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  const handleSignOut = async function() {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out? Your data will remain on this device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          onPress: async function() {
+            await signOut();
+          },
+        },
+      ]
+    );
+  };
 
   const handleExportData = async function() {
     const habits = await storage.getHabits();
@@ -95,6 +114,23 @@ export default function SettingsScreen() {
             disabled
           />
         </View>
+
+        <Text style={styles.sectionTitle}>cloud sync</Text>
+        
+        <SyncCard onSignInPress={function() { router.push('/auth'); }} />
+        
+        {user && (
+          <TouchableOpacity style={styles.settingItem} onPress={handleSignOut}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingIcon}>🚪</Text>
+              <View>
+                <Text style={styles.settingLabel}>Sign Out</Text>
+                <Text style={styles.settingDesc}>{user.email}</Text>
+              </View>
+            </View>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.sectionTitle}>data</Text>
 

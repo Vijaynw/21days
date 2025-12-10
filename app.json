@@ -40,6 +40,52 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "HabitWidgetSmall",
+              "label": "21 Days - Quick View",
+              "description": "Shows today's habit progress",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable",
+              "previewImage": "./assets/images/icon.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "HabitWidgetMedium",
+              "label": "21 Days - Habits List",
+              "description": "Shows your habits with completion status",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable",
+              "previewImage": "./assets/images/icon.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "HabitWidgetLarge",
+              "label": "21 Days - Full Dashboard",
+              "description": "Complete habit dashboard with weekly overview",
+              "minWidth": "250dp",
+              "minHeight": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 4,
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable",
+              "previewImage": "./assets/images/icon.png",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
