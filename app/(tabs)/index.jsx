@@ -9,15 +9,15 @@ import { Button } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    DeviceEventEmitter,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  DeviceEventEmitter,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -206,6 +206,33 @@ export default function HabitsScreen() {
     return habit.completions.includes(formatDate(date));
   };
 
+  const isDateMissed = (habit, date) => {
+    return (habit.missed || []).includes(formatDate(date));
+  };
+
+  const toggleMissed = async (habit, date) => {
+    const dateStr = formatDate(date);
+    const isMissed = (habit.missed || []).includes(dateStr);
+    const isCompleted = habit.completions.includes(dateStr);
+
+    // If completed, remove from completions first
+    let updatedCompletions = habit.completions;
+    if (isCompleted) {
+      updatedCompletions = habit.completions.filter(d => d !== dateStr);
+    }
+
+    const updatedHabit = {
+      ...habit,
+      completions: updatedCompletions,
+      missed: isMissed
+        ? (habit.missed || []).filter(d => d !== dateStr)
+        : [...(habit.missed || []), dateStr],
+    };
+
+    await storage.updateHabit(updatedHabit);
+    setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
+  };
+
   
   const isToday = (date) => {
     const today = new Date();
@@ -330,6 +357,7 @@ export default function HabitsScreen() {
                   >
                     {timelineDates.map((date) => {
                       const completed = isDateCompleted(habit, date);
+                      const missed = isDateMissed(habit, date);
                       const today = isToday(date);
                       const dayIndex = (date.getDay() + 6) % 7;
                       const daysAgo = getDaysAgo(date);
@@ -342,30 +370,35 @@ export default function HabitsScreen() {
                           style={[styles.dayColumn, { opacity: fadeOpacity }]}
                           onPress={(e) => {
                             e.stopPropagation();
-                            if (today) {
-                              toggleCompletion(habit, date);
-                            } else {
-                              toggleCompletion(habit, date);
-                              // router.push({ pathname: '/habit/[id]' as any, params: { id: habit.id } });
-                            }
+                            toggleCompletion(habit, date);
                           }}
+                          onLongPress={(e) => {
+                            e.stopPropagation();
+                            toggleMissed(habit, date);
+                          }}
+                          delayLongPress={300}
                           activeOpacity={0.7}
                         >
                           <View
                             style={[
                               styles.dayDot,
                               completed && styles.dayDotCompleted,
-                              today && !completed && styles.dayDotToday,
+                              missed && styles.dayDotMissed,
+                              today && !completed && !missed && styles.dayDotToday,
                             ]}
                           >
-                            <Text
-                              style={[
-                                styles.dayNumber,
-                                completed && styles.dayNumberCompleted,
-                              ]}
-                            >
-                              {date.getDate()}
-                            </Text>
+                            {missed ? (
+                              <Text style={styles.missedX}>✕</Text>
+                            ) : (
+                              <Text
+                                style={[
+                                  styles.dayNumber,
+                                  completed && styles.dayNumberCompleted,
+                                ]}
+                              >
+                                {date.getDate()}
+                              </Text>
+                            )}
                           </View>
                           <Text style={styles.dayLabel}>{DAYS_SHORT[dayIndex]}</Text>
                         </TouchableOpacity>
@@ -574,7 +607,7 @@ export default function HabitsScreen() {
         <View style={styles.successAnimationOverlay}>
           <View style={styles.successAnimationContainer}>
             <LottieAnimation
-              source={require('@/assets/animations/celebration.json')}
+              source={require('../../assets/animations/Data Profile.json')}
               autoPlay={true}
               loop={false}
               style={styles.successAnimation}
@@ -785,6 +818,11 @@ const styles = StyleSheet.create({
   dayDotCompleted: {
     backgroundColor: '#1a1a1a',
   },
+  dayDotMissed: {
+    backgroundColor: '#ffebee',
+    borderWidth: 2,
+    borderColor: '#ff4444',
+  },
   dayDotToday: {
     borderWidth: 2,
     borderColor: '#1a1a1a',
@@ -797,6 +835,11 @@ const styles = StyleSheet.create({
   },
   dayNumberCompleted: {
     color: '#fff',
+  },
+  missedX: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ff4444',
   },
   dayLabel: {
     fontSize: 11,
