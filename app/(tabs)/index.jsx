@@ -373,7 +373,7 @@ export default function HabitsScreen() {
             </View>}
 
       {/* Collection Tabs */}
-      <View style={styles.collectionTabs}>
+      {habits.length > 0 && <View style={styles.collectionTabs}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionTabsContent}>
           <TouchableOpacity
             style={[styles.collectionTab, selectedCollection === null && styles.collectionTabActive]}
@@ -402,7 +402,7 @@ export default function HabitsScreen() {
             <Text style={styles.addCollectionText}>+ New</Text>
           </TouchableOpacity>
         </ScrollView>
-      </View>
+      </View>}
 
       <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {filteredHabits.length === 0 ? (
@@ -410,10 +410,16 @@ export default function HabitsScreen() {
             <Text style={styles.emptyTitle}>track</Text>
             <Text style={styles.emptySubtitle}>your habit.</Text>
             
-            <View style={styles.quoteCard}>
+            {/* <View style={styles.quoteCard}>
               <Text style={styles.quoteText}>&ldquo;{dailyQuote.text}&rdquo;</Text>
               <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
-            </View>
+            </View> */}
+            <LottieAnimation
+              source={require('@/assets/animations/Social Engagement.json')}
+              autoPlay
+              loop
+              style={styles.emptyAnimation}
+            />
           </View>
           
         ) : (
@@ -724,7 +730,7 @@ export default function HabitsScreen() {
         <View style={styles.successAnimationOverlay}>
           <View style={styles.successAnimationContainer}>
             <LottieAnimation
-              source={require('../../assets/animations/Data Profile.json')}
+              source={require('@/assets/animations/Error.json')}
               autoPlay={true}
               loop={false}
               style={styles.successAnimation}

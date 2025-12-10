@@ -8,8 +8,8 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { DeviceEventEmitter, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { DeviceEventEmitter, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const [hasHabits, setHasHabits] = useState(false);
@@ -26,7 +26,7 @@ export default function TabLayout() {
   );
 
   return (
-    <SafeAreaView edges={['right', 'left', 'top']} style={styles.safeArea}>
+    <View style={styles.container}>
       <Tabs
         tabBar={function(props) { return <FloatingTabBar {...props} />; }}
         screenOptions={{
@@ -65,7 +65,7 @@ export default function TabLayout() {
         <Tabs.Screen name="premium" options={{ href: null }} />
         <Tabs.Screen name="[id]" options={{ href: null }} />
       </Tabs>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -75,9 +75,10 @@ function FloatingTabBar(props) {
   const state = props.state;
   const descriptors = props.descriptors;
   const navigation = props.navigation;
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.tabWrapper}>
+    <View style={[styles.tabWrapper, { bottom: Math.max(insets.bottom, 12) }]}>
       <BlurView intensity={35} tint="light" style={styles.tabBackground}>
         {state.routes.map(function(route, index) {
           if (!PRIMARY_TABS.includes(route.name)) {
@@ -145,13 +146,13 @@ function FloatingTabBar(props) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: Platform.OS !== 'ios' ? '#000000ff' : '#F2F4FB',
+    backgroundColor: '#fff',
   },
   tabWrapper: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 12 : 24,
+    // bottom is set dynamically via useSafeAreaInsets
     left: 20,
     right: 20,
     alignItems: 'center',
