@@ -3,6 +3,7 @@ import { SyncButton } from '@/components/SyncButton';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
+import { collectionsStorage } from '@/utils/collections';
 import { storage } from '@/utils/storage';
 import { calculateStreaks, formatDate } from '@/utils/streaks';
 import { Button } from '@react-navigation/elements';
@@ -101,6 +102,13 @@ export default function HabitsScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [habitPendingDelete, setHabitPendingDelete] = useState(null);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState(null); // null = all habits
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionIcon, setNewCollectionIcon] = useState('📁');
+  const [showMoveToCollectionModal, setShowMoveToCollectionModal] = useState(false);
+  const [habitToMove, setHabitToMove] = useState(null);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const timelineDates = getTimelineDates();
@@ -108,12 +116,77 @@ export default function HabitsScreen() {
   const [dailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
   useEffect(() => {
     loadHabits();
+    loadCollections();
   }, []);
 
   const loadHabits = async () => {
     const loadedHabits = await storage.getHabits();
     setHabits(loadedHabits);
   };
+
+  const loadCollections = async () => {
+    const loadedCollections = await collectionsStorage.getCollections();
+    setCollections(loadedCollections);
+  };
+
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim()) {
+      Alert.alert('Name required', 'Please enter a collection name.');
+      return;
+    }
+    await collectionsStorage.addCollection(newCollectionName.trim(), newCollectionIcon);
+    await loadCollections();
+    setNewCollectionName('');
+    setNewCollectionIcon('📁');
+    setShowCollectionModal(false);
+  };
+
+  const handleDeleteCollection = async (collectionId) => {
+    Alert.alert(
+      'Delete Collection',
+      'Are you sure? Habits in this collection will be moved to "All Habits".',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            // Move habits from this collection to no collection
+            const allHabits = await storage.getHabits();
+            const updatedHabits = allHabits.map(h => 
+              h.collectionId === collectionId ? { ...h, collectionId: null } : h
+            );
+            await storage.saveHabits(updatedHabits);
+            await collectionsStorage.deleteCollection(collectionId);
+            await loadCollections();
+            await loadHabits();
+            if (selectedCollection === collectionId) {
+              setSelectedCollection(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleMoveToCollection = async (collectionId) => {
+    if (!habitToMove) return;
+    const updatedHabit = { ...habitToMove, collectionId };
+    await storage.updateHabit(updatedHabit);
+    await loadHabits();
+    setShowMoveToCollectionModal(false);
+    setHabitToMove(null);
+  };
+
+  const openMoveToCollection = (habit) => {
+    setHabitToMove(habit);
+    setShowMoveToCollectionModal(true);
+  };
+
+  // Filter habits by selected collection
+  const filteredHabits = selectedCollection
+    ? habits.filter(h => h.collectionId === selectedCollection)
+    : habits;
 
   const openEditHabit = (habit) => {
     setHabitToEdit(habit);
@@ -299,8 +372,40 @@ export default function HabitsScreen() {
               </View>
             </View>}
 
+      {/* Collection Tabs */}
+      <View style={styles.collectionTabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionTabsContent}>
+          <TouchableOpacity
+            style={[styles.collectionTab, selectedCollection === null && styles.collectionTabActive]}
+            onPress={() => setSelectedCollection(null)}
+          >
+            <Text style={[styles.collectionTabText, selectedCollection === null && styles.collectionTabTextActive]}>
+              All
+            </Text>
+          </TouchableOpacity>
+          {collections.map(collection => (
+            <TouchableOpacity
+              key={collection.id}
+              style={[styles.collectionTab, selectedCollection === collection.id && styles.collectionTabActive]}
+              onPress={() => setSelectedCollection(collection.id)}
+              onLongPress={() => handleDeleteCollection(collection.id)}
+            >
+              <Text style={[styles.collectionTabText, selectedCollection === collection.id && styles.collectionTabTextActive]}>
+                {collection.icon} {collection.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.addCollectionTab}
+            onPress={() => setShowCollectionModal(true)}
+          >
+            <Text style={styles.addCollectionText}>+ New</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
       <ScrollView style={styles.habitsList} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        {habits.length === 0 ? (
+        {filteredHabits.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>track</Text>
             <Text style={styles.emptySubtitle}>your habit.</Text>
@@ -317,7 +422,7 @@ export default function HabitsScreen() {
 
              
 
-            {habits.map(habit => {
+            {filteredHabits.map(habit => {
               const streak = getCurrentStreak(habit);
               return (
                 <TouchableOpacity
@@ -337,7 +442,13 @@ export default function HabitsScreen() {
                       )}
                     </View>
                     <View style={styles.habitActions}>
-                     
+                      <TouchableOpacity
+                        onPress={() => openMoveToCollection(habit)}
+                        style={styles.moveButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Text style={styles.moveButtonText}>📁</Text>
+                      </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => requestHabitDelete(habit)}
                         style={styles.deleteButton}
@@ -620,6 +731,93 @@ export default function HabitsScreen() {
               onAnimationFinish={() => setShowSuccessAnimation(false)}
             />
             <Text style={styles.successText}>Great job!</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Create Collection Modal */}
+      <Modal
+        visible={showCollectionModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCollectionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>New Collection</Text>
+            <View style={styles.iconSelector}>
+              {['📁', '💼', '🏠', '💪', '🧠', '❤️', '⭐', '🎯'].map(icon => (
+                <TouchableOpacity
+                  key={icon}
+                  style={[styles.iconOption, newCollectionIcon === icon && styles.iconOptionSelected]}
+                  onPress={() => setNewCollectionIcon(icon)}
+                >
+                  <Text style={styles.iconOptionText}>{icon}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Collection name"
+              value={newCollectionName}
+              onChangeText={setNewCollectionName}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowCollectionModal(false);
+                  setNewCollectionName('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.createButton, !newCollectionName.trim() && styles.createButtonDisabled]}
+                onPress={handleCreateCollection}
+                disabled={!newCollectionName.trim()}
+              >
+                <Text style={styles.createButtonText}>Create</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Move to Collection Modal */}
+      <Modal
+        visible={showMoveToCollectionModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowMoveToCollectionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Move to Collection</Text>
+            <TouchableOpacity
+              style={styles.collectionOption}
+              onPress={() => handleMoveToCollection(null)}
+            >
+              <Text style={styles.collectionOptionText}>📋 No Collection</Text>
+              {habitToMove?.collectionId === null && <Text style={styles.checkmark}>✓</Text>}
+            </TouchableOpacity>
+            {collections.map(collection => (
+              <TouchableOpacity
+                key={collection.id}
+                style={styles.collectionOption}
+                onPress={() => handleMoveToCollection(collection.id)}
+              >
+                <Text style={styles.collectionOptionText}>{collection.icon} {collection.name}</Text>
+                {habitToMove?.collectionId === collection.id && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowMoveToCollectionModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1070,5 +1268,86 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1a1a1a',
     marginTop: 16,
+  },
+  // Collection styles
+  collectionTabs: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  collectionTabsContent: {
+    gap: 8,
+  },
+  collectionTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  collectionTabActive: {
+    backgroundColor: '#1a1a1a',
+  },
+  collectionTabText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  collectionTabTextActive: {
+    color: '#fff',
+  },
+  addCollectionTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+  },
+  addCollectionText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  moveButton: {
+    padding: 4,
+    marginRight: 8,
+  },
+  moveButtonText: {
+    fontSize: 16,
+  },
+  collectionOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  collectionOptionText: {
+    fontSize: 16,
+    color: '#1a1a1a',
+  },
+  checkmark: {
+    fontSize: 18,
+    color: '#22c55e',
+  },
+  iconSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  iconOption: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconOptionSelected: {
+    backgroundColor: '#1a1a1a',
+  },
+  iconOptionText: {
+    fontSize: 20,
   },
 });
