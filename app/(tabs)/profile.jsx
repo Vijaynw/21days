@@ -190,7 +190,7 @@ export default function ProfileScreen() {
             style={styles.settingItem}
             onPress={handleSignOut}
           >
-            <Text style={styles.settingIcon}>🚪</Text>
+            <Text style={styles.settingIcon}>🚀</Text>
             <Text style={[styles.settingText, { color: '#ff4444' }]}>sign out</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
