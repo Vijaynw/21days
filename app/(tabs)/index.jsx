@@ -350,8 +350,9 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Habits</Text>
         <SyncButton style={styles.syncButton} />
+        <Text style={styles.title}>My Habits</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
                   {/* Feature 4: Weekly Summary Widget */}

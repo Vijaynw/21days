@@ -93,8 +93,9 @@ export function PremiumProvider(props) {
       console.error('Error loading subscription:', error);
     }
   };
-
-  const isPremium = (subscription.plan !== 'free' && subscription.isActive) || trial.isActive;
+//  const isPremium = (subscription.plan !== 'free' && subscription.isActive) || trial.isActive;
+  // For now, all users are premium
+  const isPremium = true;
 
   const canAddMoreHabits = useCallback(function(currentCount) {
     if (isPremium) return true;

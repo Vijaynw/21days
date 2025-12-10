@@ -7,14 +7,31 @@ import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const BUYMEACOFFEE_URL = 'https://buymeacoffee.com/mrstardust';
 
 export default function ProfileScreen() {
   const [habits, setHabits] = useState([]);
-  const {user} = useAuth();
+  const { user, signOut } = useAuth();
   console.log("user",user)
+
+  const handleSignOut = function() {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async function() {
+            await signOut();
+          },
+        },
+      ]
+    );
+  };
   const [totalCompletions, setTotalCompletions] = useState(0);
   const router = useRouter();
 
@@ -153,8 +170,8 @@ export default function ProfileScreen() {
           >
             <Text style={styles.coffeeEmoji}>☕</Text>
             <View style={styles.coffeeTextContainer}>
-              <Text style={styles.coffeeTitle}>Buy Me a Coffee</Text>
-              <Text style={styles.coffeeSubtext}>Support the development of 21days</Text>
+              <Text style={styles.coffeeTitle}>Buy Me a Cup of Motivation</Text>
+              <Text style={styles.coffeeSubtext}>A little support goes a long way</Text>
             </View>
             <Text style={styles.coffeeArrow}>›</Text>
           </TouchableOpacity>
@@ -166,6 +183,15 @@ export default function ProfileScreen() {
           >
             <Text style={styles.settingIcon}>⚙️</Text>
             <Text style={styles.settingText}>settings</Text>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={handleSignOut}
+          >
+            <Text style={styles.settingIcon}>🚪</Text>
+            <Text style={[styles.settingText, { color: '#ff4444' }]}>sign out</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
         </View>

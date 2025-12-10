@@ -60,6 +60,7 @@ const MAPPING = {
   'arrow.up.circle.fill': 'arrow-circle-up',
   'arrow.right': 'arrow-forward',
   'clock.fill': 'schedule',
+  'person.fill': 'person'
 };
 
 /**
