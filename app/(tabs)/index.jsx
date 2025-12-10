@@ -414,6 +414,7 @@ export default function HabitsScreen() {
               <Text style={styles.quoteText}>&ldquo;{dailyQuote.text}&rdquo;</Text>
               <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
             </View> */}
+            
             <LottieAnimation
               source={require('@/assets/animations/Social Engagement.json')}
               autoPlay
