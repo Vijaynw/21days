@@ -4,7 +4,7 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +21,9 @@ import {
 
 export default function AuthScreen() {
   const { signIn, signUp, loading } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const navigation = useNavigation();
+  const canGoBack = navigation.canGoBack();
+  const [isSignUp, setIsSignUp] = useState(true); // Show Sign Up first for new users
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,19 +53,20 @@ export default function AuthScreen() {
         if (error) {
           Alert.alert('Sign Up Error', error.message);
         } else {
+          // Sign up successful - user will be auto-logged in by Supabase
+          // The auth state change will trigger redirect to main app
           Alert.alert(
-            'Check Your Email',
-            'We sent you a confirmation email. Please verify your email to continue.',
-            [{ text: 'OK', onPress: () => router.back() }]
+            'Welcome!',
+            'Your account has been created successfully.',
+            [{ text: 'OK' }]
           );
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
           Alert.alert('Sign In Error', error.message);
-        } else {
-          router.back();
         }
+        // Success - auth state change will trigger redirect to main app
       }
     } finally {
       setSubmitting(false);
@@ -79,21 +82,23 @@ export default function AuthScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Header - only show back button if we can go back */}
+        {canGoBack && (
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logo}>☁️</Text>
-          <Text style={styles.title}>Cloud Sync</Text>
+        <View style={[styles.logoContainer, !canGoBack && { marginTop: 60 }]}>
+          <Text style={styles.logo}>🎯</Text>
+          <Text style={styles.title}>21days</Text>
           <Text style={styles.subtitle}>
             {isSignUp
-              ? 'Create an account to sync your habits'
-              : 'Sign in to sync your habits across devices'}
+              ? 'Create an account to start building habits'
+              : 'Sign in to track your habits'}
           </Text>
         </View>
 

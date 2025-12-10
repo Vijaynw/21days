@@ -1,4 +1,5 @@
 import { LottieAnimation } from '@/components/lottie-animation';
+import { SyncButton } from '@/components/SyncButton';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
@@ -8,15 +9,15 @@ import { Button } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  DeviceEventEmitter,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    DeviceEventEmitter,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 const DAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -243,7 +244,9 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <SyncButton style={styles.syncButton} />
         <Text style={styles.title}>My Habits</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
                   {/* Feature 4: Weekly Summary Widget */}
@@ -592,14 +595,17 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
   },
+  syncButton: {
+    marginRight: 12,
+  },
   headerSpacer: {
-    flex: 1,
+    width: 40,
   },
   addButton: {
     width: 32,
