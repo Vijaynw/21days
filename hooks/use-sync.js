@@ -37,7 +37,8 @@ export function useSync() {
     setSyncStatus('syncing');
 
     try {
-      const result = await syncService.syncAll();
+      // Push local data to cloud (local overrides cloud)
+      const result = await syncService.pushToCloud();
       
       if (result.success) {
         setSyncStatus('synced');

@@ -271,6 +271,7 @@ export const syncService = {
         icon: h.icon,
         createdAt: h.created_at,
         completions: h.completions || [],
+        missed: h.missed || [],
         reminderTime: h.reminder_time,
         notes: h.notes || {},
       }));
