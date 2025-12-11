@@ -13,6 +13,7 @@ const AuthContext = createContext({
   signUp: async () => {},
   signOut: async () => {},
   signInWithGoogle: async () => {},
+  deleteUser: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -97,6 +98,21 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const deleteUser = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(
+        user.id
+      );
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +123,7 @@ export function AuthProvider({ children }) {
         signUp,
         signOut,
         signInWithGoogle,
+        deleteUser,
       }}
     >
       {children}

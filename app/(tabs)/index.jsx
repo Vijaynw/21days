@@ -731,7 +731,7 @@ export default function HabitsScreen() {
         <View style={styles.successAnimationOverlay}>
           <View style={styles.successAnimationContainer}>
             <LottieAnimation
-              source={require('@/assets/animations/Error.json')}
+              source={require('@/assets/animations/Smart Card.json')}
               autoPlay={true}
               loop={false}
               style={styles.successAnimation}

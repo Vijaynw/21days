@@ -13,7 +13,7 @@ const BUYMEACOFFEE_URL = 'https://buymeacoffee.com/mrstardust';
 
 export default function ProfileScreen() {
   const [habits, setHabits] = useState([]);
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteUser } = useAuth();
   console.log("user",user)
 
   const handleSignOut = function() {
@@ -27,6 +27,28 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async function() {
             await signOut();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteUser = function() {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async function() {
+            const { error } = await deleteUser();
+            if (error) {
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            } else {
+              Alert.alert('Success', 'Your account has been deleted successfully.');
+            }
           },
         },
       ]
@@ -192,6 +214,15 @@ export default function ProfileScreen() {
           >
             <Text style={styles.settingIcon}>🚀</Text>
             <Text style={[styles.settingText, { color: '#ff4444' }]}>sign out</Text>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={handleDeleteUser}
+          >
+            <Text style={styles.settingIcon}>🗑️</Text>
+            <Text style={[styles.settingText, { color: '#ff4444' }]}>delete account</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
         </View>
