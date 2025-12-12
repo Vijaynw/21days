@@ -89,9 +89,9 @@ export default function AuthScreen() {
           </View>
         )}
 
-        <View style={[styles.logoContainer, !canGoBack && { marginTop: 40 }]}>
+        <View style={[styles.logoContainer, !canGoBack && { marginTop: 80 }]}>
           <LottieAnimation
-            source={require('@/assets/animations/success.json')}
+            source={require('@/assets/animations/Documents.json')}
             autoPlay
             loop
             style={styles.lottie}

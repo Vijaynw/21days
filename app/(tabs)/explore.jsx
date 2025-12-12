@@ -216,7 +216,7 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    paddingTop: 60,
   },
   header: {
     paddingHorizontal: 20,

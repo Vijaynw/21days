@@ -9,15 +9,15 @@ import { PREMIUM_FEATURES, PRICING_PLANS } from '@/types/premium';
 import { isRazorpayAvailable, processPayment } from '@/utils/razorpay-service';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Linking,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Linking,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 export default function PremiumScreen() {
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 24,
   },
   backButton: {
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
   // Premium user styles
   premiumHeader: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 32,
   },
   premiumTitle: {
