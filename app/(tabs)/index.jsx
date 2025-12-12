@@ -1,4 +1,5 @@
 import { LottieAnimation } from '@/components/lottie-animation';
+import SyncButton from '@/components/SyncButton';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
@@ -350,7 +351,7 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        {/* <SyncButton style={styles.syncButton} /> */}
+        <SyncButton style={styles.syncButton} />
         <Text style={styles.title}>My Habits</Text>
         <TouchableOpacity
           style={styles.helpButton}

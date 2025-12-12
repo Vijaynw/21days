@@ -6,11 +6,11 @@
 import { useSync } from '@/hooks/use-sync';
 import { useEffect, useRef } from 'react';
 import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const AUTO_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
