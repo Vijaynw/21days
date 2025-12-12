@@ -3,6 +3,7 @@
  * Sign in / Sign up for cloud sync
  */
 
+import { LottieAnimation } from '@/components/lottie-animation';
 import { useAuth } from '@/contexts/AuthContext';
 import { router, useNavigation } from 'expo-router';
 import { useState } from 'react';
@@ -23,7 +24,7 @@ export default function AuthScreen() {
   const { signIn, signUp, loading } = useAuth();
   const navigation = useNavigation();
   const canGoBack = navigation.canGoBack();
-  const [isSignUp, setIsSignUp] = useState(true); // Show Sign Up first for new users
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -53,8 +54,6 @@ export default function AuthScreen() {
         if (error) {
           Alert.alert('Sign Up Error', error.message);
         } else {
-          // Sign up successful - user will be auto-logged in by Supabase
-          // The auth state change will trigger redirect to main app
           Alert.alert(
             'Welcome!',
             'Your account has been created successfully.',
@@ -66,7 +65,6 @@ export default function AuthScreen() {
         if (error) {
           Alert.alert('Sign In Error', error.message);
         }
-        // Success - auth state change will trigger redirect to main app
       }
     } finally {
       setSubmitting(false);
@@ -81,8 +79,8 @@ export default function AuthScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header - only show back button if we can go back */}
         {canGoBack && (
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -91,9 +89,13 @@ export default function AuthScreen() {
           </View>
         )}
 
-        {/* Logo */}
-        <View style={[styles.logoContainer, !canGoBack && { marginTop: 60 }]}>
-          <Text style={styles.logo}>🎯</Text>
+        <View style={[styles.logoContainer, !canGoBack && { marginTop: 40 }]}>
+          <LottieAnimation
+            source={require('@/assets/animations/success.json')}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
           <Text style={styles.title}>21days</Text>
           <Text style={styles.subtitle}>
             {isSignUp
@@ -102,14 +104,13 @@ export default function AuthScreen() {
           </Text>
         </View>
 
-        {/* Form */}
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
               placeholder="your@email.com"
-              placeholderTextColor="#666"
+              placeholderTextColor="#999"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -123,7 +124,7 @@ export default function AuthScreen() {
             <TextInput
               style={styles.input}
               placeholder="••••••••"
-              placeholderTextColor="#666"
+              placeholderTextColor="#999"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -136,7 +137,7 @@ export default function AuthScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"
-                placeholderTextColor="#666"
+                placeholderTextColor="#999"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -169,23 +170,6 @@ export default function AuthScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Info */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Why sync?</Text>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>📱</Text>
-            <Text style={styles.infoText}>Access habits on multiple devices</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>💾</Text>
-            <Text style={styles.infoText}>Never lose your progress</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>🔒</Text>
-            <Text style={styles.infoText}>Secure cloud backup</Text>
-          </View>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -194,107 +178,119 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#F8F9FA',
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: 24,
+    paddingBottom: 40,
   },
+
   header: {
     paddingTop: 40,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   backButton: {
     alignSelf: 'flex-start',
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   backButtonText: {
-    color: '#0a7ea4',
+    color: '#007AFF',
     fontSize: 16,
+    fontWeight: '600',
   },
+
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
-  logo: {
-    fontSize: 64,
-    marginBottom: 16,
+  lottie: {
+    width: 150,
+    height: 150,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#1A1A2E',
+    letterSpacing: 0.5,
+    marginTop: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#9BA1A6',
+    color: '#6B7280',
     textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: 280,
+    marginTop: 8,
   },
+
   form: {
-    marginBottom: 40,
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
+
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    color: '#9BA1A6',
+    color: '#374151',
     marginBottom: 8,
+    fontWeight: '600',
   },
   input: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
     padding: 16,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#1F2937',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#E5E7EB',
   },
+
   submitButton: {
-    backgroundColor: '#0a7ea4',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#007AFF',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   submitButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
+
   switchButton: {
-    marginTop: 16,
+    marginTop: 20,
     alignItems: 'center',
   },
   switchButtonText: {
-    color: '#0a7ea4',
-    fontSize: 14,
-  },
-  infoContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 20,
-  },
-  infoTitle: {
-    fontSize: 16,
+    color: '#007AFF',
+    fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  infoIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#9BA1A6',
   },
 });
+
