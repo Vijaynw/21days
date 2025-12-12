@@ -1,5 +1,4 @@
 import { LottieAnimation } from '@/components/lottie-animation';
-import { SyncButton } from '@/components/SyncButton';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
@@ -109,6 +108,7 @@ export default function HabitsScreen() {
   const [newCollectionIcon, setNewCollectionIcon] = useState('📁');
   const [showMoveToCollectionModal, setShowMoveToCollectionModal] = useState(false);
   const [habitToMove, setHabitToMove] = useState(null);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const { canAddMoreHabits } = usePremium();
   const router = useRouter();
   const timelineDates = getTimelineDates();
@@ -350,9 +350,14 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <SyncButton style={styles.syncButton} />
+        {/* <SyncButton style={styles.syncButton} /> */}
         <Text style={styles.title}>My Habits</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={() => setShowHelpModal(true)}
+        >
+          <Text style={styles.helpButtonText}>?</Text>
+        </TouchableOpacity>
       </View>
 
                   {/* Feature 4: Weekly Summary Widget */}
@@ -540,17 +545,37 @@ export default function HabitsScreen() {
       <Modal visible={isAdding} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>new habit</Text>
+            <Text style={styles.modalTitle}>New Habit</Text>
             
             <TextInput
               style={styles.input}
-              placeholder="habit name"
+              placeholder="Habit Name"
               placeholderTextColor="#999"
               value={newHabitName}
               onChangeText={setNewHabitName}
               autoFocus
             />
-            
+                        <Text style={styles.suggestionsTitle}>Icon</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.iconScroll}
+              contentContainerStyle={styles.iconScrollContent}
+            >
+              {ICON_CHOICES.map((icon) => (
+                <TouchableOpacity
+                  key={icon}
+                  style={[
+                    styles.iconChip,
+                    newHabitIcon === icon && styles.iconChipActive,
+                  ]}
+                  onPress={() => setNewHabitIcon(icon)}
+                >
+                  <Text style={styles.iconChipText}>{icon}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Text style={styles.suggestionsTitle}>Category</Text>
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
@@ -592,26 +617,7 @@ export default function HabitsScreen() {
                   ))}
               </View>
             </ScrollView>
-            <Text style={styles.suggestionsTitle}>icon</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.iconScroll}
-              contentContainerStyle={styles.iconScrollContent}
-            >
-              {ICON_CHOICES.map((icon) => (
-                <TouchableOpacity
-                  key={icon}
-                  style={[
-                    styles.iconChip,
-                    newHabitIcon === icon && styles.iconChipActive,
-                  ]}
-                  onPress={() => setNewHabitIcon(icon)}
-                >
-                  <Text style={styles.iconChipText}>{icon}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -828,6 +834,62 @@ export default function HabitsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Help/Tutorial Modal */}
+      <Modal
+        visible={showHelpModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowHelpModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.helpModalContent}>
+            <View style={styles.helpHeader}>
+              <Text style={styles.helpTitle}>How to use</Text>
+              <TouchableOpacity onPress={() => setShowHelpModal(false)}>
+                <Text style={styles.helpCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.helpStep}>
+              <View style={styles.helpStepNumber}>
+                <Text style={styles.helpStepNumberText}>1</Text>
+              </View>
+              <View style={styles.helpStepContent}>
+                <Text style={styles.helpStepTitle}>Tap to complete</Text>
+                <Text style={styles.helpStepDesc}>Tap any date circle to mark your habit as done for that day</Text>
+              </View>
+            </View>
+
+            <View style={styles.helpStep}>
+              <View style={styles.helpStepNumber}>
+                <Text style={styles.helpStepNumberText}>2</Text>
+              </View>
+              <View style={styles.helpStepContent}>
+                <Text style={styles.helpStepTitle}>Long press to mark missed</Text>
+                <Text style={styles.helpStepDesc}>Hold a date to mark it as missed (shows ✕)</Text>
+              </View>
+            </View>
+
+            <View style={styles.helpStep}>
+              <View style={styles.helpStepNumber}>
+                <Text style={styles.helpStepNumberText}>3</Text>
+              </View>
+              <View style={styles.helpStepContent}>
+                <Text style={styles.helpStepTitle}>Edit & organize</Text>
+                <Text style={styles.helpStepDesc}>Use the edit button to rename habits, or 📁 to move to collections</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.helpGotItButton}
+              onPress={() => setShowHelpModal(false)}
+            >
+              <Text style={styles.helpGotItText}>Got it!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -842,7 +904,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 20,
   },
   syncButton: {
@@ -850,6 +912,86 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  helpButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  helpButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  helpModalContent: {
+    width: '90%',
+    maxWidth: 340,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+  },
+  helpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  helpTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  helpCloseText: {
+    fontSize: 20,
+    color: '#999',
+  },
+  helpStep: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
+  helpStepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  helpStepNumberText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  helpStepContent: {
+    flex: 1,
+  },
+  helpStepTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  helpStepDesc: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  helpGotItButton: {
+    backgroundColor: '#1a1a1a',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  helpGotItText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
   addButton: {
     width: 32,
