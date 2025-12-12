@@ -3,11 +3,22 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../utils/supabase';
 import { HabitWidgetLarge } from './HabitWidgetLarge';
 import { HabitWidgetMedium } from './HabitWidgetMedium';
 import { HabitWidgetSmall } from './HabitWidgetSmall';
 
-const HABITS_KEY = '@habits';
+// Helper to get current user ID
+const getUserId = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
+};
+
+// Helper to get user-specific storage key
+const getUserHabitsKey = async () => {
+  const userId = await getUserId();
+  return userId ? `@habits_${userId}` : '@habits_guest';
+};
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -75,7 +86,8 @@ function getWeekCompletionData(habits) {
 
 async function loadHabits() {
   try {
-    const data = await AsyncStorage.getItem(HABITS_KEY);
+    const key = await getUserHabitsKey();
+    const data = await AsyncStorage.getItem(key);
     return data ? JSON.parse(data) : [];
   } catch (_error) {
     return [];
@@ -100,7 +112,8 @@ async function toggleHabit(habitId) {
     }
     
     habits[habitIndex] = habit;
-    await AsyncStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+    const key = await getUserHabitsKey();
+    await AsyncStorage.setItem(key, JSON.stringify(habits));
   } catch (_error) {
     // Ignore
   }

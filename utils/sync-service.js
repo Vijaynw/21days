@@ -6,7 +6,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 
-const HABITS_KEY = '@habits';
+// Helper to get current user ID
+const getUserId = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
+};
+
+// Helper to get user-specific storage key
+const getUserHabitsKey = async () => {
+  const userId = await getUserId();
+  return userId ? `@habits_${userId}` : '@habits_guest';
+};
+
 const LAST_SYNC_KEY = '@last_sync';
 const SYNC_STATUS_KEY = '@sync_status';
 
@@ -32,7 +43,8 @@ export const syncService = {
    */
   async getLocalHabits() {
     try {
-      const data = await AsyncStorage.getItem(HABITS_KEY);
+      const key = await getUserHabitsKey();
+      const data = await AsyncStorage.getItem(key);
       return data ? JSON.parse(data) : [];
     } catch (_error) {
       return [];
@@ -44,7 +56,8 @@ export const syncService = {
    */
   async saveLocalHabits(habits) {
     try {
-      await AsyncStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+      const key = await getUserHabitsKey();
+      await AsyncStorage.setItem(key, JSON.stringify(habits));
     } catch (error) {
       console.error('Error saving local habits:', error);
     }

@@ -6,12 +6,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 
-const HABITS_KEY = '@habits';
-
 // Helper to get current user ID
 const getUserId = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id || null;
+};
+
+// Helper to get user-specific storage key
+const getUserHabitsKey = async () => {
+  const userId = await getUserId();
+  return userId ? `@habits_${userId}` : '@habits_guest';
 };
 
 // Helper to sync habit to Supabase
@@ -63,7 +67,8 @@ const deleteHabitFromCloud = async (habitId) => {
 export const storage = {
   async getHabits() {
     try {
-      const data = await AsyncStorage.getItem(HABITS_KEY);
+      const key = await getUserHabitsKey();
+      const data = await AsyncStorage.getItem(key);
       return data ? JSON.parse(data) : [];
     } catch (error) {
       console.error('Error loading habits:', error);
@@ -73,7 +78,8 @@ export const storage = {
 
   async saveHabits(habits) {
     try {
-      await AsyncStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+      const key = await getUserHabitsKey();
+      await AsyncStorage.setItem(key, JSON.stringify(habits));
     } catch (error) {
       console.error('Error saving habits:', error);
     }

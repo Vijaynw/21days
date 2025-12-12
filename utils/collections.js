@@ -4,14 +4,26 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './supabase';
 
-const COLLECTIONS_KEY = '@collections';
+// Helper to get current user ID
+const getUserId = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
+};
+
+// Helper to get user-specific storage key for collections
+const getUserCollectionsKey = async () => {
+  const userId = await getUserId();
+  return userId ? `@collections_${userId}` : '@collections_guest';
+};
 
 export const collectionsStorage = {
   // Get all collections
   async getCollections() {
     try {
-      const data = await AsyncStorage.getItem(COLLECTIONS_KEY);
+      const key = await getUserCollectionsKey();
+      const data = await AsyncStorage.getItem(key);
       return data ? JSON.parse(data) : [];
     } catch (error) {
       console.error('Error loading collections:', error);
@@ -22,7 +34,8 @@ export const collectionsStorage = {
   // Save all collections
   async saveCollections(collections) {
     try {
-      await AsyncStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
+      const key = await getUserCollectionsKey();
+      await AsyncStorage.setItem(key, JSON.stringify(collections));
     } catch (error) {
       console.error('Error saving collections:', error);
     }
