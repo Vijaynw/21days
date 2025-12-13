@@ -60,6 +60,7 @@ export default function AuthScreen() {
             'Your account has been created successfully. Please check your email for a confirmation link.',
             [{ text: 'OK' }]
           );
+           await storage.setGuestMode(false)
         }
       } else {
         const { error } = await signIn(email, password);
@@ -69,6 +70,7 @@ export default function AuthScreen() {
       }
     } finally {
       setSubmitting(false);
+      await storage.setGuestMode(false)
     }
   };
 
