@@ -6,11 +6,28 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 
-// Helper to get current user ID
+// Cache for user ID to avoid repeated auth calls
+let cachedUserId = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 30000; // 30 seconds
+
+// Helper to get current user ID (with caching)
 const getUserId = async () => {
+  const now = Date.now();
+  if (cachedUserId && (now - cacheTimestamp) < CACHE_DURATION) {
+    return cachedUserId;
+  }
   const { data: { user } } = await supabase.auth.getUser();
-  return user?.id || null;
+  cachedUserId = user?.id || null;
+  cacheTimestamp = now;
+  return cachedUserId;
 };
+
+// Clear cache on auth state change
+supabase.auth.onAuthStateChange(() => {
+  cachedUserId = null;
+  cacheTimestamp = 0;
+});
 
 // Helper to check if user is in guest mode
 const isGuestMode = async () => {
@@ -104,9 +121,9 @@ export const storage = {
       // Only sync to cloud if not in guest mode
       if (!(await isGuestMode())) {
         // Sync habits to cloud (background operation)
-        habits.forEach(habit => {
-          syncHabitToCloud(habit).catch(console.error);
-        });
+        // habits.forEach(habit => {
+        //   syncHabitToCloud(habit).catch(console.error);
+        // });
       }
     } catch (error) {
       console.error('Error saving habits:', error);
@@ -183,9 +200,9 @@ export const storage = {
       // Sync all existing habits to cloud
       const userId = await getUserId();
       if (userId) {
-        for (const habit of habits) {
-          await syncHabitToCloud(habit);
-        }
+        // for (const habit of habits) {
+        //   await syncHabitToCloud(habit);
+        // }
       }
       
       return { success: true, message: 'Successfully upgraded to cloud storage' };
