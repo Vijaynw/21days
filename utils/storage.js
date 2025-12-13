@@ -90,7 +90,7 @@ export const storage = {
     habits.push(habit);
     await this.saveHabits(habits);
     // Sync to Supabase
-    syncHabitToCloud(habit);
+    // syncHabitToCloud(habit);
   },
 
   async updateHabit(updatedHabit) {
@@ -102,7 +102,7 @@ export const storage = {
       habits[index] = updatedHabit;
       await this.saveHabits(habits);
       // Sync to Supabase
-      syncHabitToCloud(updatedHabit);
+      // syncHabitToCloud(updatedHabit);
     }
   },
 
@@ -113,7 +113,7 @@ export const storage = {
     });
     await this.saveHabits(filtered);
     // Delete from Supabase
-    deleteHabitFromCloud(habitId);
+    // deleteHabitFromCloud(habitId);
   },
 
   async getItem(key) {

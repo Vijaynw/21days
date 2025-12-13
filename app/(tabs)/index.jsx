@@ -263,6 +263,7 @@ export default function HabitsScreen() {
     const dateStr = formatDate(date);
     const isCompleted = habit.completions.includes(dateStr);
 
+    // Update UI immediately for instant feedback
     const updatedHabit = {
       ...habit,
       completions: isCompleted
@@ -270,14 +271,16 @@ export default function HabitsScreen() {
         : [...habit.completions, dateStr],
     };
 
-    await storage.updateHabit(updatedHabit);
     setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
 
+    // Save to storage in background (non-blocking)
+    storage.updateHabit(updatedHabit).catch(console.error);
+
     // Show success animation when completing a habit (not uncompleting)
-    if (!isCompleted && isToday(date)) {
-      setShowSuccessAnimation(true);
-      setTimeout(() => setShowSuccessAnimation(false), 1500);
-    }
+    // if (!isCompleted && isToday(date)) {
+    //   setShowSuccessAnimation(true);
+    //   setTimeout(() => setShowSuccessAnimation(false), 1500);
+    // }
   };
 
   const isDateCompleted = (habit, date) => {
@@ -299,6 +302,7 @@ export default function HabitsScreen() {
       updatedCompletions = habit.completions.filter(d => d !== dateStr);
     }
 
+    // Update UI immediately for instant feedback
     const updatedHabit = {
       ...habit,
       completions: updatedCompletions,
@@ -307,8 +311,10 @@ export default function HabitsScreen() {
         : [...(habit.missed || []), dateStr],
     };
 
-    await storage.updateHabit(updatedHabit);
     setHabits(habits.map(h => (h.id === habit.id ? updatedHabit : h)));
+
+    // Save to storage in background (non-blocking)
+    storage.updateHabit(updatedHabit).catch(console.error);
   };
 
   
@@ -727,7 +733,7 @@ export default function HabitsScreen() {
       </Modal>
 
       {/* Success Animation Modal */}
-      <Modal
+      {/* <Modal
         visible={showSuccessAnimation}
         transparent={true}
         animationType="fade"
@@ -745,7 +751,7 @@ export default function HabitsScreen() {
             <Text style={styles.successText}>Great job!</Text>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
 
       {/* Create Collection Modal */}
       <Modal
