@@ -1,5 +1,4 @@
 import { LottieAnimation } from '@/components/lottie-animation';
-import SyncButton from '@/components/SyncButton';
 import { usePremium } from '@/contexts/PremiumContext';
 // Types removed for JavaScript
 import { FREE_TIER_LIMITS } from '@/types/premium';
@@ -119,7 +118,6 @@ export default function HabitsScreen() {
     loadHabits();
     loadCollections();
   }, []);
-
   const loadHabits = async () => {
     const loadedHabits = await storage.getHabits();
     setHabits(loadedHabits);
@@ -351,7 +349,7 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <SyncButton style={styles.syncButton} />
+        {/* <SyncButton style={styles.syncButton} /> */}
         <Text style={styles.title}>My Habits</Text>
         <TouchableOpacity
           style={styles.helpButton}
@@ -471,7 +469,7 @@ export default function HabitsScreen() {
                       </TouchableOpacity>
                     </View>
                   </View>
-                  <View style={{flex:1,flexDirection:"row"}}>
+                  <View style={{flex:1,flexDirection:"row", gap: 12}}>
                     <Button color='#9da1a4ff' onPress={() => router.push({ pathname: '[id]', params: { id: habit.id} })}>Progress </Button>
                     <Button color='#9da1a4ff' onPress={() => openEditHabit(habit)}>edit</Button>
                   </View>
@@ -1140,7 +1138,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 24,
-    color: '#ccc',
+    color: '#fa0000ff',
     fontWeight: '300',
   },
   monthLabel: {
@@ -1325,6 +1323,11 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     marginTop: 10,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
   },
   quoteText: {
     fontSize: 16,

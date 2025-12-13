@@ -56,7 +56,7 @@ export default function AuthScreen() {
         } else {
           Alert.alert(
             'Welcome!',
-            'Your account has been created successfully.',
+            'Your account has been created successfully. Please check your email for a confirmation link.',
             [{ text: 'OK' }]
           );
         }
