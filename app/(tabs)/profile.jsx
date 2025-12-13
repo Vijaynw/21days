@@ -3,6 +3,7 @@
  */
 
 import LottieAnimation from '@/components/lottie-animation';
+import SyncButton from '@/components/SyncButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -199,6 +200,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+          <TouchableOpacity 
+            style={styles.settingItem}
+          >
+             <SyncButton />
+            <Text style={styles.settingText}>Sync habits</Text>
+            {/* <Text style={styles.settingArrow}>  ></Text> */}
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.settingItem}
             onPress={function() { router.push('./settings'); }}

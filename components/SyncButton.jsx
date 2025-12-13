@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 
-const AUTO_SYNC_INTERVAL =10000; // 5 minutes in milliseconds
+const AUTO_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export function SyncButton({ style }) {
   const { syncing, syncStatus, sync, isAuthenticated } = useSync();

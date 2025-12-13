@@ -93,6 +93,7 @@ export const syncService = {
 
     try {
       const habitData = {
+        missed: habit.missed || [],
         id: habit.id,
         user_id: userId,
         name: habit.name,
