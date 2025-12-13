@@ -5,6 +5,7 @@
 
 import { LottieAnimation } from '@/components/lottie-animation';
 import { useAuth } from '@/contexts/AuthContext';
+import { storage } from '@/utils/storage';
 import { router, useNavigation } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -169,6 +170,23 @@ export default function AuthScreen() {
                 : "Don't have an account? Sign Up"}
             </Text>
           </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={async () => {
+              await storage.setGuestMode(true);
+              router.replace('/(tabs)');
+            }}
+          >
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            <Text style={styles.guestSubtext}>Limited to 3 habits, no cloud sync</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -291,6 +309,39 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 15,
     fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  guestButton: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  guestButtonText: {
+    color: '#1F2937',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  guestSubtext: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

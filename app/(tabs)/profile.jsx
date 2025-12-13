@@ -3,7 +3,6 @@
  */
 
 import LottieAnimation from '@/components/lottie-animation';
-import SyncButton from '@/components/SyncButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/utils/storage';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -14,8 +13,56 @@ const BUYMEACOFFEE_URL = 'https://buymeacoffee.com/mrstardust';
 
 export default function ProfileScreen() {
   const [habits, setHabits] = useState([]);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const { user, signOut, deleteUser } = useAuth();
   console.log("user",user)
+
+  const checkGuestMode = async () => {
+    const guestMode = await storage.isGuestMode();
+    setIsGuestMode(guestMode);
+  };
+
+  const handleToggleGuestMode = async () => {
+    if (isGuestMode) {
+      // Upgrade to cloud
+      Alert.alert(
+        'Upgrade to Cloud Storage',
+        'Sync your habits to the cloud and access them across devices?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Upgrade',
+            onPress: async () => {
+              const result = await storage.upgradeToCloud();
+              if (result.success) {
+                setIsGuestMode(false);
+                Alert.alert('Success', result.message);
+              } else {
+                Alert.alert('Error', result.message);
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      // Switch to guest mode
+      Alert.alert(
+        'Guest Mode',
+        'Switch to guest mode? Your data will only be stored locally and not synced to the cloud.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Switch',
+            onPress: async () => {
+              await storage.setGuestMode(true);
+              setIsGuestMode(true);
+              Alert.alert('Success', 'Switched to guest mode');
+            }
+          }
+        ]
+      );
+    }
+  };
 
   const handleSignOut = function() {
     Alert.alert(
@@ -61,6 +108,7 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(function() {
       loadStats();
+      checkGuestMode();
     }, [])
   );
 
@@ -200,14 +248,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-          >
-             <SyncButton />
-            <Text style={styles.settingText}>Sync habits</Text>
-            {/* <Text style={styles.settingArrow}>  ></Text> */}
-          </TouchableOpacity>
-          <TouchableOpacity 
+                    <TouchableOpacity 
             style={styles.settingItem}
             onPress={function() { router.push('./settings'); }}
           >
@@ -218,21 +259,45 @@ export default function ProfileScreen() {
 
           <TouchableOpacity 
             style={styles.settingItem}
-            onPress={handleSignOut}
+            onPress={handleToggleGuestMode}
           >
-            <Text style={styles.settingIcon}>🚀</Text>
-            <Text style={[styles.settingText, { color: '#ff4444' }]}>sign out</Text>
+            <Text style={styles.settingIcon}>{isGuestMode ? '📴' : '☁️'}</Text>
+            <Text style={styles.settingText}>{isGuestMode ? 'upgrade to cloud' : 'guest mode'}</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={handleDeleteUser}
-          >
-            <Text style={styles.settingIcon}>🗑️</Text>
-            <Text style={[styles.settingText, { color: '#ff4444' }]}>delete account</Text>
-            <Text style={styles.settingArrow}>›</Text>
-          </TouchableOpacity>
+          {!isGuestMode && (
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={handleSignOut}
+            >
+              <Text style={styles.settingIcon}>🚀</Text>
+              <Text style={[styles.settingText, { color: '#ff4444' }]}>sign out</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+          )}
+
+          {!isGuestMode && (
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={handleDeleteUser}
+            >
+              <Text style={styles.settingIcon}>🗑️</Text>
+              <Text style={[styles.settingText, { color: '#ff4444' }]}>delete account</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+          )}
+
+          {isGuestMode && (
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={() => router.push('/auth')}
+            >
+              <Text style={styles.settingIcon}>🔐</Text>
+              <Text style={[styles.settingText, { color: '#007AFF' }]}>sign up / sign in</Text>
+              <Text style={styles.settingArrow}>›</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* About Section */}

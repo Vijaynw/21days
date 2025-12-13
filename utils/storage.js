@@ -12,6 +12,26 @@ const getUserId = async () => {
   return user?.id || null;
 };
 
+// Helper to check if user is in guest mode
+const isGuestMode = async () => {
+  try {
+    const guestMode = await AsyncStorage.getItem('@guest_mode');
+    return guestMode === 'true';
+  } catch (error) {
+    console.error('Error checking guest mode:', error);
+    return false;
+  }
+};
+
+// Helper to set guest mode
+const setGuestMode = async (isGuest) => {
+  try {
+    await AsyncStorage.setItem('@guest_mode', isGuest.toString());
+  } catch (error) {
+    console.error('Error setting guest mode:', error);
+  }
+};
+
 // Helper to get user-specific storage key
 const getUserHabitsKey = async () => {
   const userId = await getUserId();
@@ -80,6 +100,14 @@ export const storage = {
     try {
       const key = await getUserHabitsKey();
       await AsyncStorage.setItem(key, JSON.stringify(habits));
+      
+      // Only sync to cloud if not in guest mode
+      if (!(await isGuestMode())) {
+        // Sync habits to cloud (background operation)
+        habits.forEach(habit => {
+          syncHabitToCloud(habit).catch(console.error);
+        });
+      }
     } catch (error) {
       console.error('Error saving habits:', error);
     }
@@ -112,8 +140,10 @@ export const storage = {
       return h.id !== habitId;
     });
     await this.saveHabits(filtered);
-    // Delete from Supabase
-    // deleteHabitFromCloud(habitId);
+    // Delete from Supabase (only if not in guest mode)
+    if (!(await isGuestMode())) {
+      deleteHabitFromCloud(habitId);
+    }
   },
 
   async getItem(key) {
@@ -130,6 +160,76 @@ export const storage = {
       await AsyncStorage.setItem(key, value);
     } catch (error) {
       console.error('Error setting item:', error);
+    }
+  },
+
+  // Guest mode methods
+  async isGuestMode() {
+    return await isGuestMode();
+  },
+
+  async setGuestMode(isGuest) {
+    await setGuestMode(isGuest);
+  },
+
+  async upgradeToCloud() {
+    try {
+      // Get current local data
+      const habits = await this.getHabits();
+      
+      // Switch to cloud mode
+      await setGuestMode(false);
+      
+      // Sync all existing habits to cloud
+      const userId = await getUserId();
+      if (userId) {
+        for (const habit of habits) {
+          await syncHabitToCloud(habit);
+        }
+      }
+      
+      return { success: true, message: 'Successfully upgraded to cloud storage' };
+    } catch (error) {
+      console.error('Error upgrading to cloud:', error);
+      return { success: false, message: 'Failed to upgrade to cloud storage' };
+    }
+  },
+
+  async migrateFromGuest() {
+    try {
+      // Get guest data
+      const guestKey = '@habits_guest';
+      const guestData = await AsyncStorage.getItem(guestKey);
+      
+      if (guestData) {
+        const guestHabits = JSON.parse(guestData);
+        
+        // Get user-specific key
+        const userKey = await getUserHabitsKey();
+        
+        // Move data to user-specific storage
+        await AsyncStorage.setItem(userKey, guestData);
+        
+        // Clear guest data
+        await AsyncStorage.removeItem(guestKey);
+        
+        // Sync to cloud if not guest mode
+        if (!(await isGuestMode())) {
+          const userId = await getUserId();
+          if (userId) {
+            for (const habit of guestHabits) {
+              await syncHabitToCloud(habit);
+            }
+          }
+        }
+        
+        return { success: true, message: 'Data migrated successfully' };
+      }
+      
+      return { success: true, message: 'No guest data to migrate' };
+    } catch (error) {
+      console.error('Error migrating from guest:', error);
+      return { success: false, message: 'Failed to migrate data' };
     }
   },
 };

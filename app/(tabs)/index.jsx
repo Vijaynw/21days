@@ -114,10 +114,19 @@ export default function HabitsScreen() {
   const timelineDates = getTimelineDates();
   const currentMonth = MONTHS_SHORT[new Date().getMonth()];
   const [dailyQuote] = useState(MOTIVATIONAL_QUOTES[0]);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const GUEST_HABIT_LIMIT = 3;
+
   useEffect(() => {
     loadHabits();
     loadCollections();
+    checkGuestMode();
   }, []);
+
+  const checkGuestMode = async () => {
+    const guestMode = await storage.isGuestMode();
+    setIsGuestMode(guestMode);
+  };
   const loadHabits = async () => {
     const loadedHabits = await storage.getHabits();
     setHabits(loadedHabits);
@@ -211,11 +220,24 @@ export default function HabitsScreen() {
     setEditedHabitIcon('🎯');
   };
 
-  const handleAddHabitPress = useCallback(() => {
+  const handleAddHabitPress = useCallback(async () => {
+    // Check guest mode limit first
+    if (isGuestMode && habits.length >= GUEST_HABIT_LIMIT) {
+      Alert.alert(
+        'Guest Limit Reached',
+        `Guest users can only create ${GUEST_HABIT_LIMIT} habits. Sign up for free to unlock more!`,
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Sign Up', onPress: () => router.push('/auth') },
+        ]
+      );
+      return;
+    }
+    
     if (!canAddMoreHabits(habits.length)) {
       Alert.alert(
         'Habit Limit Reached',
-        `Free users can track up to ${FREE_TIER_LIMITS.maxHabits} habits. Upgrade to Premium!`,
+        `Free users can track up to ${FREE_TIER_LIMITS.maxHabits} habits. Upgrade to Premium for unlimited habits!`,
         [
           { text: 'Maybe Later', style: 'cancel' },
           { text: 'Go Premium', onPress: () => router.push('/premium') },
@@ -224,7 +246,7 @@ export default function HabitsScreen() {
       return;
     }
     setIsAdding(true);
-  }, [canAddMoreHabits, habits.length, router]);
+  }, [canAddMoreHabits, habits.length, router, isGuestMode, GUEST_HABIT_LIMIT]);
 
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener('open-add-habit', () => {
